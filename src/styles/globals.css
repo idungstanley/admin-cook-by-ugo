@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand palette, shared with the customer site. Stored as RGB channels for opacity modifiers. */
+    --color-jollof: 200 64 28; /* #C8401C */
+    --color-jollof-dark: 168 51 21;
+    --color-gold: 242 178 62; /* #F2B23E */
+    --color-gold-soft: 251 233 196;
+    --color-ewedu: 30 91 58; /* #1E5B3A */
+    --color-ewedu-soft: 218 234 223;
+    --color-indigo: 35 58 115; /* #233A73 */
+    --color-indigo-soft: 222 227 240;
+    --color-cocoa: 28 15 10; /* #1C0F0A */
+    --color-cocoa-soft: 42 28 22;
+    --color-shea: 246 237 224; /* #F6EDE0 */
+    --color-paper: 255 250 242; /* #FFFAF2 */
+    --color-muted: 107 93 82;
+    --color-line: 229 216 198;
+    --color-chart-blue: 74 103 181; /* Indigo step that passes the chart lightness check. */
+    --color-danger-soft: 248 221 211;
+
+    --font-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+    --font-accent: 'Fraunces Variable', Georgia, serif;
+    --font-body: 'Manrope Variable', system-ui, sans-serif;
+
+    --radius-card: 1.25rem;
+    --radius-panel: 1.75rem;
+    --sidebar-width: 16.5rem;
+  }
+
+  body {
+    @apply bg-shea font-body text-cocoa antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display font-extrabold;
+    letter-spacing: -0.03em;
+  }
+
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-jollof;
+  }
+
+  dialog::backdrop {
+    background: rgb(var(--color-cocoa) / 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

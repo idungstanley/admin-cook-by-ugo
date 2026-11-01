@@ -1,0 +1,13 @@
+export const queryKeys = {
+  orders: ['orders'] as const,
+  order: (id: string) => ['orders', id] as const,
+  categories: ['categories'] as const,
+  dishes: ['dishes'] as const,
+  optionGroups: ['option-groups'] as const,
+  deals: ['deals'] as const,
+  settings: ['settings'] as const,
+  customers: ['customers'] as const,
+  content: ['content'] as const,
+  enquiries: ['enquiries'] as const,
+  staff: ['staff'] as const,
+}
