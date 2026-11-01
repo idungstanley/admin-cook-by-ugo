@@ -19,9 +19,9 @@ export const SidebarNav = ({ onNavigate }: { onNavigate?: () => void }) => {
 
   return (
     <div className="flex h-full flex-col bg-cocoa text-paper">
-      <div className="px-5 pb-1 pt-5">
-        <Logo />
-        <p className="ml-9 text-xs text-paper/60">Admin</p>
+      <div className="flex items-center gap-3 px-5 pb-1 pt-5">
+        <Logo onDark className="size-16" />
+        <p className="text-sm font-bold text-paper/80">Admin</p>
       </div>
 
       <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-4">

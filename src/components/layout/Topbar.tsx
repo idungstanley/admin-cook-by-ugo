@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/Button'
 import { IconButton } from '@/components/ui/IconButton'
 import { Logo } from '@/components/ui/Logo'
 import { usePermission } from '@/hooks/usePermission'
-import { cn } from '@/lib/cn'
 import { useSettings, useSetOrdersPaused } from '@/services/settings/settings.queries'
 import { useUiStore } from '@/stores/ui.store'
 
@@ -23,7 +22,7 @@ export const Topbar = () => {
       <IconButton label="Open menu" className="lg:hidden" onClick={() => setNavOpen(true)}>
         <Menu className="size-5" />
       </IconButton>
-      <Logo className={cn('lg:hidden', canManageShop && 'max-sm:hidden')} />
+      <Logo className="lg:hidden" />
 
       <div className="ml-auto flex items-center gap-2">
         <Badge tone={paused ? 'jollof' : 'ewedu'} className="max-sm:hidden">

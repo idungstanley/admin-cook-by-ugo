@@ -154,7 +154,7 @@ export const LoginPage = () => {
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-cocoa p-12 text-paper lg:flex">
-        <Logo className="text-paper" />
+        <Logo onDark className="size-36" />
         <p className="font-display text-6xl font-extrabold leading-[1.02] tracking-tight">
           Every order,
           <span className="block font-accent font-semibold italic tracking-normal text-gold">
@@ -166,7 +166,7 @@ export const LoginPage = () => {
 
       <div className="flex flex-col justify-center px-5 py-8">
         <div className="mx-auto w-full max-w-md">
-          <Logo className="mb-8 lg:hidden" />
+          <Logo className="mb-6 size-24 lg:hidden" />
           {member ? (
             <TwoFactorForm member={member} onBack={() => setMember(null)} />
           ) : (
