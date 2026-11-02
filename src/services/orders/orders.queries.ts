@@ -4,13 +4,17 @@ import { queryKeys } from '@/constants/queryKeys'
 import { useAppMutation } from '@/hooks/useAppMutation'
 import { ordersApi } from './orders.api'
 
-export const useOrders = () =>
+/** Tonight's service. Live updates arrive over the socket, and polling is only the fallback. */
+export const useActiveOrders = () =>
   useQuery({
-    queryKey: queryKeys.orders,
-    queryFn: ordersApi.listOrders,
+    queryKey: queryKeys.activeOrders,
+    queryFn: ordersApi.listActive,
     refetchInterval: ORDERS_POLL_MS,
     staleTime: 0,
   })
+
+export const useOrders = () =>
+  useQuery({ queryKey: queryKeys.orders, queryFn: ordersApi.listOrders, staleTime: 0 })
 
 export const useOrder = (orderId: string) =>
   useQuery({
@@ -43,6 +47,3 @@ export const useRecordCollection = () =>
 
 export const useCancelOrder = () =>
   useAppMutation({ mutationFn: ordersApi.cancel, invalidate, success: 'Order cancelled' })
-
-export const useSimulateOrder = () =>
-  useAppMutation({ mutationFn: ordersApi.simulateNewOrder, invalidate })

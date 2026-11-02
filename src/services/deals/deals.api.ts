@@ -1,25 +1,13 @@
-import { db } from '@/mocks/db'
-import { createId, findOrThrow, mockRequest } from '@/services/mockClient'
+import { http } from '@/lib/http'
 import type { Deal } from '@/types'
 
 export type DealInput = Omit<Deal, 'id'>
 
 export const dealsApi = {
-  listDeals: () => mockRequest(() => db.deals),
-
+  listDeals: () => http.get<Deal[]>('/deals'),
   saveDeal: ({ id, input }: { id?: string; input: DealInput }) =>
-    mockRequest(() => {
-      if (id) Object.assign(findOrThrow(db.deals, id, 'Deal'), input)
-      else db.deals.push({ ...input, id: createId('deal') })
-    }),
-
+    id ? http.put<Deal>(`/deals/${id}`, input) : http.post<Deal>('/deals', input),
   setActive: ({ id, active }: { id: string; active: boolean }) =>
-    mockRequest(() => {
-      findOrThrow(db.deals, id, 'Deal').active = active
-    }),
-
-  deleteDeal: (id: string) =>
-    mockRequest(() => {
-      db.deals = db.deals.filter((deal) => deal.id !== id)
-    }),
+    http.patch<Deal>(`/deals/${id}/active`, { active }),
+  deleteDeal: (id: string) => http.delete<void>(`/deals/${id}`),
 }

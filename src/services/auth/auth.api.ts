@@ -1,33 +1,31 @@
-import { db } from '@/mocks/db'
-import { mockRequest } from '@/services/mockClient'
+import { http } from '@/lib/http'
+import type { StaffMember } from '@/types'
 
-/**
- * Demo-only sign in, with no real security. Replace with Appwrite Auth and MFA before any real
- * data is added. These values exist so the screens can be tried.
- */
-export const DEMO_PASSWORD = 'ugo-demo'
-export const DEMO_TWO_FACTOR_CODE = '123456'
-
-const findStaff = (email: string) => {
-  const member = db.staff.find((staff) => staff.email === email.trim().toLowerCase())
-  if (!member) throw new Error('Email or password is incorrect')
-  if (!member.active) throw new Error('This account has been deactivated')
-  return member
+interface SignedIn {
+  user: StaffMember
+  requiresTwoFactor?: false
 }
 
+interface TwoFactorRequired {
+  requiresTwoFactor: true
+  challengeToken: string
+}
+
+const authOnly = { skipSessionCheck: true }
+
 export const authApi = {
-  signIn: ({ email, password }: { email: string; password: string }) =>
-    mockRequest(() => {
-      const member = findStaff(email)
-      if (password !== DEMO_PASSWORD) throw new Error('Email or password is incorrect')
-      return member
-    }),
-
-  verifyCode: ({ email, code }: { email: string; code: string }) =>
-    mockRequest(() => {
-      if (code !== DEMO_TWO_FACTOR_CODE) throw new Error('That code is not right')
-      return findStaff(email)
-    }),
-
-  requestPasswordReset: () => mockRequest(() => true),
+  signIn: (credentials: { email: string; password: string }) =>
+    http.post<SignedIn | TwoFactorRequired>('/auth/login', credentials, authOnly),
+  verifyCode: (input: { challengeToken: string; code: string }) =>
+    http.post<SignedIn>('/auth/verify-code', input, authOnly),
+  signOut: () => http.post<void>('/auth/logout', undefined, authOnly),
+  me: () => http.get<{ user: StaffMember }>('/auth/me', authOnly),
+  requestPasswordReset: (email: string) =>
+    http.post<void>('/auth/forgot-password', { email }, authOnly),
+  resetPassword: (input: { token: string; password: string }) =>
+    http.post<void>('/auth/reset-password', input, authOnly),
+  startTwoFactorSetup: () =>
+    http.post<{ secret: string; otpauthUrl: string }>('/auth/two-factor/setup'),
+  enableTwoFactor: (code: string) =>
+    http.post<{ user: StaffMember }>('/auth/two-factor/enable', { code }),
 }

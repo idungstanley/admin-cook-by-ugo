@@ -6,6 +6,8 @@ import { staffApi } from './staff.api'
 const invalidate = [queryKeys.staff]
 
 export const useStaff = () => useQuery({ queryKey: queryKeys.staff, queryFn: staffApi.listStaff })
+export const useRiders = () =>
+  useQuery({ queryKey: queryKeys.riders, queryFn: staffApi.listRiders })
 export const useSaveStaff = () =>
   useAppMutation({ mutationFn: staffApi.saveStaff, invalidate, success: 'Staff saved' })
 export const useSetStaffActive = () =>

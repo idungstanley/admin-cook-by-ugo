@@ -1,6 +1,7 @@
 import { Outlet } from '@tanstack/react-router'
 import { Drawer } from '@/components/ui/Overlay'
 import { useNewOrderAlert } from '@/hooks/useNewOrderAlert'
+import { useOrderEvents } from '@/hooks/useOrderEvents'
 import { usePermission } from '@/hooks/usePermission'
 import { useUiStore } from '@/stores/ui.store'
 import { SidebarNav } from './SidebarNav'
@@ -9,6 +10,11 @@ import { Topbar } from './Topbar'
 /** Renders nothing. It keeps the alert running on every page for staff who see orders. */
 const OrderAlerts = () => {
   useNewOrderAlert()
+  return null
+}
+
+const OrderEvents = () => {
+  useOrderEvents()
   return null
 }
 
@@ -38,6 +44,7 @@ export const AppShell = () => {
         <Outlet />
       </main>
       {canSeeOrders && <OrderAlerts />}
+      <OrderEvents />
     </div>
   )
 }

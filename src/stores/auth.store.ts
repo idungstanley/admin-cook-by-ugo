@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
 import type { StaffMember } from '@/types'
 
 interface AuthState {
@@ -8,13 +7,9 @@ interface AuthState {
   signOut: () => void
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      signIn: (user) => set({ user }),
-      signOut: () => set({ user: null }),
-    }),
-    { name: 'cook-by-ugo-admin-session', storage: createJSONStorage(() => sessionStorage) },
-  ),
-)
+/** Held in memory only. The session itself is an httpOnly cookie that scripts cannot read. */
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  signIn: (user) => set({ user }),
+  signOut: () => set({ user: null }),
+}))

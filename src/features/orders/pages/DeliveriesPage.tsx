@@ -7,7 +7,7 @@ import { PageSkeleton } from '@/components/ui/Skeleton'
 import { ErrorMessage, StatusMessage } from '@/components/ui/StatusMessage'
 import { usePermission } from '@/hooks/usePermission'
 import { formatPrice, pluralise } from '@/lib/format'
-import { useOrders } from '@/services/orders/orders.queries'
+import { useActiveOrders } from '@/services/orders/orders.queries'
 import { useAuthStore } from '@/stores/auth.store'
 import type { Order } from '@/types'
 import { AdvanceOrderButton } from '../components/AdvanceOrderButton'
@@ -75,7 +75,7 @@ const DeliveryCard = ({ order }: { order: Order }) => {
 export const DeliveriesPage = () => {
   const user = useAuthStore((state) => state.user)
   const seesAllRiders = usePermission('orders')
-  const { data: orders, isPending, isError, refetch } = useOrders()
+  const { data: orders, isPending, isError, refetch } = useActiveOrders()
 
   if (isPending) return <PageSkeleton />
   if (isError) return <ErrorMessage onRetry={() => void refetch()} />

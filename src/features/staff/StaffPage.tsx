@@ -19,6 +19,7 @@ import { formatDateTime } from '@/lib/format'
 import { useSaveStaff, useSetStaffActive, useStaff } from '@/services/staff/staff.queries'
 import { useAuthStore } from '@/stores/auth.store'
 import type { Role, StaffMember } from '@/types'
+import { TwoFactorCard } from './TwoFactorCard'
 
 const ROLES = Object.keys(ROLE_LABELS) as Role[]
 
@@ -140,6 +141,8 @@ export const StaffPage = () => {
           </Button>
         }
       />
+
+      <TwoFactorCard />
 
       <div className="mb-5 grid gap-3 md:grid-cols-3">
         {ROLES.map((role) => (

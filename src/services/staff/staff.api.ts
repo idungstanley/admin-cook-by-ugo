@@ -1,5 +1,4 @@
-import { db } from '@/mocks/db'
-import { createId, findOrThrow, mockRequest } from '@/services/mockClient'
+import { http } from '@/lib/http'
 import type { Role, StaffMember } from '@/types'
 
 export interface StaffInput {
@@ -8,42 +7,11 @@ export interface StaffInput {
   role: Role
 }
 
-const activeOwners = () => db.staff.filter(({ role, active }) => role === 'owner' && active)
-
-const assertNotLastOwner = (member: StaffMember) => {
-  if (member.role === 'owner' && activeOwners().length === 1) {
-    throw new Error('There must always be one active owner')
-  }
-}
-
 export const staffApi = {
-  listStaff: () => mockRequest(() => db.staff),
-
+  listStaff: () => http.get<StaffMember[]>('/staff'),
+  listRiders: () => http.get<Pick<StaffMember, 'id' | 'name'>[]>('/staff/riders'),
   saveStaff: ({ id, input }: { id?: string; input: StaffInput }) =>
-    mockRequest(() => {
-      if (!id) {
-        if (db.staff.some(({ email }) => email === input.email.toLowerCase())) {
-          throw new Error('Someone already uses that email')
-        }
-        db.staff.push({
-          ...input,
-          email: input.email.toLowerCase(),
-          id: createId('staff'),
-          active: true,
-          twoFactorEnabled: false,
-          lastActiveAt: Date.now(),
-        })
-        return
-      }
-      const member = findOrThrow(db.staff, id, 'Staff member')
-      if (input.role !== 'owner') assertNotLastOwner(member)
-      Object.assign(member, input)
-    }),
-
+    id ? http.put<StaffMember>(`/staff/${id}`, input) : http.post<StaffMember>('/staff', input),
   setActive: ({ id, active }: { id: string; active: boolean }) =>
-    mockRequest(() => {
-      const member = findOrThrow(db.staff, id, 'Staff member')
-      if (!active) assertNotLastOwner(member)
-      member.active = active
-    }),
+    http.patch<StaffMember>(`/staff/${id}/active`, { active }),
 }

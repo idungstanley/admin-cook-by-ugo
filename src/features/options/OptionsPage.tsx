@@ -14,13 +14,13 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { PageSkeleton } from '@/components/ui/Skeleton'
 import { ErrorMessage } from '@/components/ui/StatusMessage'
 import { formatPrice, penceToPounds, pluralise, poundsToPence } from '@/lib/format'
+import { createId } from '@/lib/ids'
 import {
   useDeleteOptionGroup,
   useDishes,
   useOptionGroups,
   useSaveOptionGroup,
 } from '@/services/menu/menu.queries'
-import { createId } from '@/services/mockClient'
 import type { Dish, OptionGroup } from '@/types'
 
 const groupSchema = z.object({

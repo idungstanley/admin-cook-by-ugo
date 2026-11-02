@@ -430,3 +430,6 @@ FodyWeavers.xsd
 # Build output
 dist/
 *.tsbuildinfo
+.env
+.env.*
+!.env.example

@@ -2,6 +2,7 @@ import type { OrderStatus, PaymentStatus } from '@/types'
 import type { BadgeTone } from '@/components/ui/Badge'
 
 export const ORDER_STATUS_META: Record<OrderStatus, { label: string; tone: BadgeTone }> = {
+  'pending-payment': { label: 'Awaiting payment', tone: 'neutral' },
   received: { label: 'New', tone: 'jollof' },
   preparing: { label: 'Preparing', tone: 'gold' },
   'out-for-delivery': { label: 'Out for delivery', tone: 'indigo' },
@@ -10,6 +11,7 @@ export const ORDER_STATUS_META: Record<OrderStatus, { label: string; tone: Badge
 }
 
 export const PAYMENT_STATUS_META: Record<PaymentStatus, { label: string; tone: BadgeTone }> = {
+  pending: { label: 'Awaiting payment', tone: 'neutral' },
   paid: { label: 'Paid', tone: 'ewedu' },
   due: { label: 'Due on delivery', tone: 'gold' },
   'partially-refunded': { label: 'Part refunded', tone: 'indigo' },
@@ -29,7 +31,7 @@ export const NEXT_STATUS: Partial<Record<OrderStatus, { status: OrderStatus; act
   'out-for-delivery': { status: 'delivered', action: 'Mark delivered' },
 }
 
-export const ORDERS_POLL_MS = 4000
+export const ORDERS_POLL_MS = 30_000
 /** Done column only shows recent orders, so the board stays about tonight's service. */
 export const BOARD_DONE_WINDOW_HOURS = 3
 export const HISTORY_PAGE_SIZE = 12

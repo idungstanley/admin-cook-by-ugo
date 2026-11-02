@@ -1,18 +1,12 @@
-import { db } from '@/mocks/db'
-import { mockRequest } from '@/services/mockClient'
+import { http } from '@/lib/http'
 import type { ShopSettings } from '@/types'
 
 export const settingsApi = {
-  getSettings: () => mockRequest(() => db.settings),
-
+  getSettings: () => http.get<ShopSettings>('/settings'),
   saveSettings: (input: Omit<ShopSettings, 'ordersPaused'>) =>
-    mockRequest(() => {
-      Object.assign(db.settings, input)
-    }),
-
-  setOrdersPaused: (ordersPaused: boolean) =>
-    mockRequest(() => {
-      db.settings.ordersPaused = ordersPaused
-      return ordersPaused
-    }),
+    http.put<ShopSettings>('/settings', input),
+  setOrdersPaused: async (ordersPaused: boolean) => {
+    await http.patch('/settings/paused', { ordersPaused })
+    return ordersPaused
+  },
 }

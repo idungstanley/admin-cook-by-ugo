@@ -1,5 +1,6 @@
 export const queryKeys = {
   orders: ['orders'] as const,
+  activeOrders: ['orders', 'active'] as const,
   order: (id: string) => ['orders', id] as const,
   categories: ['categories'] as const,
   dishes: ['dishes'] as const,
@@ -10,4 +11,5 @@ export const queryKeys = {
   content: ['content'] as const,
   enquiries: ['enquiries'] as const,
   staff: ['staff'] as const,
+  riders: ['riders'] as const,
 }

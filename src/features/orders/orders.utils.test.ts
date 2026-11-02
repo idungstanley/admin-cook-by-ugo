@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { toCsv } from '@/lib/csv'
 import type { Order } from '@/types'
-import {
-  applyRefund,
-  filterOrders,
-  getBoardOrders,
-  getRefundableAmount,
-  isOverdue,
-} from './orders.utils'
+import { filterOrders, getBoardOrders, getRefundableAmount, isOverdue } from './orders.utils'
 
 const NOW = new Date('2026-11-01T18:00:00').getTime()
 
@@ -35,19 +29,10 @@ const order = (overrides: Partial<Order> = {}): Order => ({
 })
 
 describe('refunds', () => {
-  it('tracks partial then full refunds', () => {
-    const first = applyRefund(order(), 1000)
-    expect(first).toEqual({ refundedAmount: 1000, paymentStatus: 'partially-refunded' })
-    expect(applyRefund(order(first), 2000)).toEqual({
-      refundedAmount: 3000,
-      paymentStatus: 'refunded',
-    })
-  })
-
-  it('never refunds more than was paid', () => {
-    expect(() =>
-      applyRefund(order({ refundedAmount: 2500, paymentStatus: 'partially-refunded' }), 501),
-    ).toThrow()
+  it('knows what is left to refund', () => {
+    expect(
+      getRefundableAmount(order({ refundedAmount: 500, paymentStatus: 'partially-refunded' })),
+    ).toBe(2500)
   })
 
   it('has nothing to refund on unpaid or pay-on-delivery orders', () => {

@@ -3,6 +3,7 @@ import { LogOut } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { NAV_SECTIONS } from '@/constants/navigation'
 import { ROLE_LABELS, ROLE_PERMISSIONS } from '@/constants/roles'
+import { authApi } from '@/services/auth/auth.api'
 import { useAuthStore } from '@/stores/auth.store'
 
 export const SidebarNav = ({ onNavigate }: { onNavigate?: () => void }) => {
@@ -58,7 +59,7 @@ export const SidebarNav = ({ onNavigate }: { onNavigate?: () => void }) => {
           type="button"
           aria-label="Sign out"
           title="Sign out"
-          onClick={signOut}
+          onClick={() => void authApi.signOut().finally(signOut)}
           className="grid size-10 place-items-center rounded-full transition hover:bg-paper/10"
         >
           <LogOut className="size-[18px]" />

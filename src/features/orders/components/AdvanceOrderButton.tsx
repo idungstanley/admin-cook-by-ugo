@@ -2,14 +2,13 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Overlay'
 import { NEXT_STATUS } from '@/constants/orders'
-import { useActorName } from '@/hooks/useActorName'
 import { formatPrice } from '@/lib/format'
 import {
   useAssignRider,
   useRecordCollection,
   useUpdateOrderStatus,
 } from '@/services/orders/orders.queries'
-import { useStaff } from '@/services/staff/staff.queries'
+import { useRiders } from '@/services/staff/staff.queries'
 import type { Order } from '@/types'
 
 interface AdvanceOrderButtonProps {
@@ -25,16 +24,15 @@ interface AdvanceOrderButtonProps {
 export const AdvanceOrderButton = ({ order, size = 'md', fullWidth }: AdvanceOrderButtonProps) => {
   const [dialog, setDialog] = useState<'rider' | 'collect' | null>(null)
   const closeDialog = () => setDialog(null)
-  const actor = useActorName()
   const updateStatus = useUpdateOrderStatus()
   const recordCollection = useRecordCollection()
   const assignRider = useAssignRider()
-  const { data: staff } = useStaff()
+  const { data: riders } = useRiders()
   const next = NEXT_STATUS[order.status]
 
   if (!next) return null
 
-  const moveOn = () => updateStatus.mutate({ orderId: order.id, actor, status: next.status })
+  const moveOn = () => updateStatus.mutate({ orderId: order.id, status: next.status })
 
   const advance = () => {
     if (next.status === 'delivered' && order.paymentStatus === 'due') setDialog('collect')
@@ -44,7 +42,7 @@ export const AdvanceOrderButton = ({ order, size = 'md', fullWidth }: AdvanceOrd
 
   const sendWithRider = (riderId: string) =>
     assignRider.mutate(
-      { orderId: order.id, actor, riderId },
+      { orderId: order.id, riderId },
       {
         onSuccess: () => {
           closeDialog()
@@ -54,7 +52,7 @@ export const AdvanceOrderButton = ({ order, size = 'md', fullWidth }: AdvanceOrd
     )
 
   const collect = (collectedBy: 'cash' | 'card') =>
-    recordCollection.mutate({ orderId: order.id, actor, collectedBy }, { onSuccess: closeDialog })
+    recordCollection.mutate({ orderId: order.id, collectedBy }, { onSuccess: closeDialog })
 
   return (
     <>
@@ -65,19 +63,17 @@ export const AdvanceOrderButton = ({ order, size = 'md', fullWidth }: AdvanceOrd
         <div className="p-6">
           <h2 className="text-xl">Who is taking {order.number}?</h2>
           <div className="mt-4 flex flex-col gap-2">
-            {staff
-              ?.filter(({ role, active }) => role === 'rider' && active)
-              .map(({ id, name }) => (
-                <Button
-                  key={id}
-                  variant="dark"
-                  size="lg"
-                  disabled={assignRider.isPending}
-                  onClick={() => sendWithRider(id)}
-                >
-                  {name}
-                </Button>
-              ))}
+            {riders?.map(({ id, name }) => (
+              <Button
+                key={id}
+                variant="dark"
+                size="lg"
+                disabled={assignRider.isPending}
+                onClick={() => sendWithRider(id)}
+              >
+                {name}
+              </Button>
+            ))}
           </div>
         </div>
       </Modal>

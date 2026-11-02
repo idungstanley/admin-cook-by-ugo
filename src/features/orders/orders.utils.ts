@@ -24,19 +24,6 @@ export const getRefundableAmount = (order: Order): Pence =>
     ? order.total - order.refundedAmount
     : 0
 
-export const applyRefund = (order: Order, amount: Pence) => {
-  const refundable = getRefundableAmount(order)
-  if (amount <= 0 || amount > refundable)
-    throw new Error('Enter an amount up to the refundable total')
-
-  const refundedAmount = order.refundedAmount + amount
-  return {
-    refundedAmount,
-    paymentStatus:
-      refundedAmount === order.total ? ('refunded' as const) : ('partially-refunded' as const),
-  }
-}
-
 export interface OrderFilters {
   search: string
   status: OrderStatus | 'all'

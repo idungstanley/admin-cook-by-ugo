@@ -8,15 +8,9 @@ import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/fields'
 import { Logo } from '@/components/ui/Logo'
 import { HOME_ROUTE } from '@/constants/roles'
-import { authApi, DEMO_PASSWORD, DEMO_TWO_FACTOR_CODE } from '@/services/auth/auth.api'
+import { authApi } from '@/services/auth/auth.api'
 import { useAuthStore } from '@/stores/auth.store'
 import type { StaffMember } from '@/types'
-
-const DEMO_ACCOUNTS = [
-  { label: 'Owner', email: 'owner@example.com' },
-  { label: 'Kitchen', email: 'kitchen@example.com' },
-  { label: 'Rider', email: 'rider@example.com' },
-]
 
 const credentialsSchema = z.object({
   email: z.email('Enter your email'),
@@ -25,24 +19,35 @@ const credentialsSchema = z.object({
 
 type Credentials = z.infer<typeof credentialsSchema>
 
-const CredentialsForm = ({ onVerified }: { onVerified: (member: StaffMember) => void }) => {
-  const [resetSent, setResetSent] = useState(false)
-  const signIn = useMutation({ mutationFn: authApi.signIn, onSuccess: onVerified })
-  const reset = useMutation({
-    mutationFn: authApi.requestPasswordReset,
-    onSuccess: () => setResetSent(true),
+const useFinishSignIn = () => {
+  const navigate = useNavigate()
+  const signIn = useAuthStore((state) => state.signIn)
+
+  return (user: StaffMember) => {
+    signIn(user)
+    void navigate({ to: HOME_ROUTE[user.role] })
+  }
+}
+
+interface CredentialsFormProps {
+  onTwoFactor: (challengeToken: string) => void
+  onForgot: () => void
+}
+
+const CredentialsForm = ({ onTwoFactor, onForgot }: CredentialsFormProps) => {
+  const finish = useFinishSignIn()
+  const signIn = useMutation({
+    mutationFn: authApi.signIn,
+    onSuccess: (result) => {
+      if (result.requiresTwoFactor) onTwoFactor(result.challengeToken)
+      else finish(result.user)
+    },
   })
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<Credentials>({ resolver: zodResolver(credentialsSchema) })
-
-  const fillDemo = (email: string) => {
-    setValue('email', email, { shouldValidate: true })
-    setValue('password', DEMO_PASSWORD, { shouldValidate: true })
-  }
 
   return (
     <form
@@ -78,39 +83,27 @@ const CredentialsForm = ({ onVerified }: { onVerified: (member: StaffMember) => 
       </Button>
       <button
         type="button"
-        onClick={() => reset.mutate()}
+        onClick={onForgot}
         className="self-center text-sm font-semibold text-muted underline-offset-2 hover:underline"
       >
-        {resetSent ? 'Check your email for a reset link' : 'Forgot your password?'}
+        Forgot your password?
       </button>
-
-      <div className="rounded-2xl bg-gold-soft p-4">
-        <p className="text-sm font-bold">Demo accounts</p>
-        <p className="mb-2 text-xs text-muted">
-          Sample data only. Pick a role, then use code {DEMO_TWO_FACTOR_CODE}.
-        </p>
-        <div className="flex gap-2">
-          {DEMO_ACCOUNTS.map(({ label, email }) => (
-            <Button key={label} variant="outline" size="sm" onClick={() => fillDemo(email)}>
-              {label}
-            </Button>
-          ))}
-        </div>
-      </div>
     </form>
   )
 }
 
-const TwoFactorForm = ({ member, onBack }: { member: StaffMember; onBack: () => void }) => {
-  const navigate = useNavigate()
-  const signInUser = useAuthStore((state) => state.signIn)
+const TwoFactorForm = ({
+  challengeToken,
+  onBack,
+}: {
+  challengeToken: string
+  onBack: () => void
+}) => {
+  const finish = useFinishSignIn()
   const [code, setCode] = useState('')
   const verify = useMutation({
     mutationFn: authApi.verifyCode,
-    onSuccess: (user) => {
-      signInUser(user)
-      void navigate({ to: HOME_ROUTE[user.role] })
-    },
+    onSuccess: ({ user }) => finish(user),
   })
 
   return (
@@ -118,7 +111,7 @@ const TwoFactorForm = ({ member, onBack }: { member: StaffMember; onBack: () => 
       noValidate
       onSubmit={(event) => {
         event.preventDefault()
-        verify.mutate({ email: member.email, code })
+        verify.mutate({ challengeToken, code })
       }}
       className="flex flex-col gap-4"
     >
@@ -148,8 +141,50 @@ const TwoFactorForm = ({ member, onBack }: { member: StaffMember; onBack: () => 
   )
 }
 
+const ForgotForm = ({ onBack }: { onBack: () => void }) => {
+  const [email, setEmail] = useState('')
+  const reset = useMutation({ mutationFn: authApi.requestPasswordReset })
+
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault()
+        reset.mutate(email)
+      }}
+      className="flex flex-col gap-4"
+    >
+      <div>
+        <h1 className="text-3xl">Reset your password</h1>
+        <p className="mt-1 text-sm text-muted">
+          {reset.isSuccess
+            ? 'If that email has an account, a reset link is on its way.'
+            : 'Enter your email and we will send you a link.'}
+        </p>
+      </div>
+      <TextField
+        label="Email"
+        type="email"
+        autoComplete="username"
+        required
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+      />
+      <Button type="submit" size="lg" fullWidth disabled={reset.isPending || !email}>
+        Send reset link
+      </Button>
+      <Button variant="ghost" onClick={onBack}>
+        Back to sign in
+      </Button>
+    </form>
+  )
+}
+
+type LoginStep =
+  { name: 'credentials' } | { name: 'forgot' } | { name: 'two-factor'; challengeToken: string }
+
 export const LoginPage = () => {
-  const [member, setMember] = useState<StaffMember | null>(null)
+  const [step, setStep] = useState<LoginStep>({ name: 'credentials' })
+  const backToStart = () => setStep({ name: 'credentials' })
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
@@ -167,11 +202,16 @@ export const LoginPage = () => {
       <div className="flex flex-col justify-center px-5 py-8">
         <div className="mx-auto w-full max-w-md">
           <Logo className="mb-6 size-24 lg:hidden" />
-          {member ? (
-            <TwoFactorForm member={member} onBack={() => setMember(null)} />
-          ) : (
-            <CredentialsForm onVerified={setMember} />
+          {step.name === 'credentials' && (
+            <CredentialsForm
+              onForgot={() => setStep({ name: 'forgot' })}
+              onTwoFactor={(challengeToken) => setStep({ name: 'two-factor', challengeToken })}
+            />
           )}
+          {step.name === 'two-factor' && (
+            <TwoFactorForm challengeToken={step.challengeToken} onBack={backToStart} />
+          )}
+          {step.name === 'forgot' && <ForgotForm onBack={backToStart} />}
         </div>
       </div>
     </div>

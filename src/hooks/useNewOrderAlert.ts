@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { playOrderChime } from '@/lib/chime'
-import { useOrders } from '@/services/orders/orders.queries'
+import { useActiveOrders } from '@/services/orders/orders.queries'
 import { useToastStore } from '@/stores/toast.store'
 import { useUiStore } from '@/stores/ui.store'
 
 /** Compares order ids between polls, so a chime fires once for each new order. */
 export const useNewOrderAlert = () => {
-  const { data: orders } = useOrders()
+  const { data: orders } = useActiveOrders()
   const toast = useToastStore((state) => state.push)
   const soundEnabled = useUiStore((state) => state.soundEnabled)
   const seenIds = useRef<Set<string> | null>(null)

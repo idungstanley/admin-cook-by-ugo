@@ -28,9 +28,10 @@ export interface StaffMember {
   lastActiveAt: number
 }
 
-export type OrderStatus = 'received' | 'preparing' | 'out-for-delivery' | 'delivered' | 'cancelled'
+export type OrderStatus =
+  'pending-payment' | 'received' | 'preparing' | 'out-for-delivery' | 'delivered' | 'cancelled'
 export type PaymentMethod = 'card' | 'on-delivery'
-export type PaymentStatus = 'paid' | 'due' | 'partially-refunded' | 'refunded'
+export type PaymentStatus = 'pending' | 'paid' | 'due' | 'partially-refunded' | 'refunded'
 export type CollectedBy = 'cash' | 'card'
 
 export interface OrderItem {

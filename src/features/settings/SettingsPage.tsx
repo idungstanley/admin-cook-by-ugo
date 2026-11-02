@@ -11,7 +11,7 @@ import { PageSkeleton } from '@/components/ui/Skeleton'
 import { ErrorMessage } from '@/components/ui/StatusMessage'
 import { WEEK_DAYS } from '@/constants/menu'
 import { penceToPounds, poundsToPence } from '@/lib/format'
-import { createId } from '@/services/mockClient'
+import { createId } from '@/lib/ids'
 import { useSaveSettings, useSettings } from '@/services/settings/settings.queries'
 import type { ShopSettings } from '@/types'
 

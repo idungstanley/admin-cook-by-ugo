@@ -1,4 +1,6 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
+import { uploadImage } from '@/services/uploads.api'
+import { useToastStore } from '@/stores/toast.store'
 
 interface ImageFieldProps {
   label: string
@@ -6,9 +8,21 @@ interface ImageFieldProps {
   onChange: (url: string) => void
 }
 
-/** Mock upload using a temporary browser URL. Appwrite Storage replaces this. */
 export const ImageField = ({ label, value, onChange }: ImageFieldProps) => {
   const id = useId()
+  const [uploading, setUploading] = useState(false)
+  const toast = useToastStore((state) => state.push)
+
+  const upload = async (file: File) => {
+    setUploading(true)
+    try {
+      onChange(await uploadImage(file))
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Upload failed', 'error')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   return (
     <div>
@@ -25,16 +39,17 @@ export const ImageField = ({ label, value, onChange }: ImageFieldProps) => {
           htmlFor={id}
           className="cursor-pointer text-sm font-semibold underline underline-offset-2"
         >
-          Choose image
+          {uploading ? 'Uploading...' : 'Choose image'}
         </label>
         <input
           id={id}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           className="sr-only"
+          disabled={uploading}
           onChange={(event) => {
             const file = event.target.files?.[0]
-            if (file) onChange(URL.createObjectURL(file))
+            if (file) void upload(file)
           }}
         />
       </div>

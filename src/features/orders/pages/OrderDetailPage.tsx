@@ -6,11 +6,10 @@ import { Card, CardSection } from '@/components/ui/Card'
 import { SelectField } from '@/components/ui/fields'
 import { PageSkeleton } from '@/components/ui/Skeleton'
 import { ErrorMessage } from '@/components/ui/StatusMessage'
-import { useActorName } from '@/hooks/useActorName'
 import { usePermission } from '@/hooks/usePermission'
 import { formatDateTime, formatPrice } from '@/lib/format'
 import { useAssignRider, useOrder, useUpdateEta } from '@/services/orders/orders.queries'
-import { useStaff } from '@/services/staff/staff.queries'
+import { useRiders } from '@/services/staff/staff.queries'
 import { AdvanceOrderButton } from '../components/AdvanceOrderButton'
 import { KitchenTicket } from '../components/KitchenTicket'
 import { AllergyAlert, OrderStatusBadge, PaymentBadge } from '../components/OrderBadges'
@@ -28,8 +27,7 @@ const Row = ({ label, children }: { label: string; children: React.ReactNode }) 
 
 export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
   const { data: order, isPending, isError, refetch } = useOrder(orderId)
-  const { data: staff } = useStaff()
-  const actor = useActorName()
+  const { data: riders = [] } = useRiders()
   const assignRider = useAssignRider()
   const updateEta = useUpdateEta()
   const canRefund = usePermission('refunds')
@@ -39,7 +37,6 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
   if (isPending) return <PageSkeleton />
   if (isError) return <ErrorMessage onRetry={() => void refetch()} />
 
-  const riders = staff?.filter(({ role, active }) => role === 'rider' && active) ?? []
   const active = isActiveOrder(order)
   const refundable = getRefundableAmount(order)
 
@@ -149,9 +146,7 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
                 <SelectField
                   label="Rider"
                   value={order.riderId ?? ''}
-                  onChange={(event) =>
-                    assignRider.mutate({ orderId, actor, riderId: event.target.value })
-                  }
+                  onChange={(event) => assignRider.mutate({ orderId, riderId: event.target.value })}
                 >
                   <option value="" disabled>
                     Choose a rider
@@ -166,7 +161,7 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
                   label="ETA from order time"
                   value={order.etaMinutes}
                   onChange={(event) =>
-                    updateEta.mutate({ orderId, actor, etaMinutes: Number(event.target.value) })
+                    updateEta.mutate({ orderId, etaMinutes: Number(event.target.value) })
                   }
                 >
                   {[...new Set([...ETA_OPTIONS, order.etaMinutes])]

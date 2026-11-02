@@ -5,7 +5,6 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/Button'
 import { TextAreaField, TextField } from '@/components/ui/fields'
 import { Modal } from '@/components/ui/Overlay'
-import { useActorName } from '@/hooks/useActorName'
 import { formatPrice, penceToPounds, poundsToPence } from '@/lib/format'
 import { useCancelOrder, useRefundOrder } from '@/services/orders/orders.queries'
 import type { Order } from '@/types'
@@ -29,7 +28,6 @@ const buildRefundSchema = (maximum: number) =>
 type RefundValues = z.infer<ReturnType<typeof buildRefundSchema>>
 
 const RefundForm = ({ order, onClose }: Omit<OrderDialogProps, 'open'>) => {
-  const actor = useActorName()
   const refund = useRefundOrder()
   const refundable = penceToPounds(getRefundableAmount(order))
   const {
@@ -43,7 +41,7 @@ const RefundForm = ({ order, onClose }: Omit<OrderDialogProps, 'open'>) => {
 
   const submit = ({ amount, reason }: RefundValues) =>
     refund.mutate(
-      { orderId: order.id, actor, amount: poundsToPence(amount), reason },
+      { orderId: order.id, amount: poundsToPence(amount), reason },
       { onSuccess: onClose },
     )
 
@@ -88,7 +86,6 @@ export const RefundDialog = ({ order, open, onClose }: OrderDialogProps) => (
 )
 
 const CancelForm = ({ order, onClose }: Omit<OrderDialogProps, 'open'>) => {
-  const actor = useActorName()
   const cancel = useCancelOrder()
   const [reason, setReason] = useState('')
   const refundable = getRefundableAmount(order)
@@ -97,7 +94,7 @@ const CancelForm = ({ order, onClose }: Omit<OrderDialogProps, 'open'>) => {
     <form
       onSubmit={(event) => {
         event.preventDefault()
-        cancel.mutate({ orderId: order.id, actor, reason }, { onSuccess: onClose })
+        cancel.mutate({ orderId: order.id, reason }, { onSuccess: onClose })
       }}
       className="flex flex-col gap-4 p-6"
     >

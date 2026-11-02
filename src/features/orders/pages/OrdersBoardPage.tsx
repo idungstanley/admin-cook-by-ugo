@@ -1,16 +1,13 @@
-import { Plus } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { PageSkeleton } from '@/components/ui/Skeleton'
 import { ErrorMessage } from '@/components/ui/StatusMessage'
 import { BOARD_COLUMNS } from '@/constants/orders'
-import { useOrders, useSimulateOrder } from '@/services/orders/orders.queries'
+import { useActiveOrders } from '@/services/orders/orders.queries'
 import { OrderCard } from '../components/OrderCard'
 import { getBoardOrders } from '../orders.utils'
 
 export const OrdersBoardPage = () => {
-  const { data: orders, isPending, isError, refetch } = useOrders()
-  const simulate = useSimulateOrder()
+  const { data: orders, isPending, isError, refetch } = useActiveOrders()
 
   if (isPending) return <PageSkeleton />
   if (isError) return <ErrorMessage onRetry={() => void refetch()} />
@@ -20,17 +17,6 @@ export const OrdersBoardPage = () => {
       <PageHeader
         title="Live orders"
         description="Tap the button on a ticket to move it on. Customers are updated at each step."
-        actions={
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={simulate.isPending}
-            onClick={() => simulate.mutate()}
-          >
-            <Plus className="size-4" />
-            Simulate order
-          </Button>
-        }
       />
 
       <div className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 md:-mx-6 md:scroll-px-6 md:px-6 xl:mx-0 xl:grid xl:grid-cols-4 xl:px-0">
