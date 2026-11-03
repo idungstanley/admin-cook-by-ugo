@@ -4,6 +4,6 @@ import { StaffPage } from '@/features/staff/StaffPage'
 
 export const Route = createFileRoute('/_app/staff')({
   beforeLoad: requirePermission('staff'),
-  head: () => ({ meta: [{ title: 'Staff and roles · Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Staff and roles · Cooked by Ugo Admin' }] }),
   component: StaffPage,
 })

@@ -4,6 +4,6 @@ import { CustomersPage } from '@/features/customers/CustomersPage'
 
 export const Route = createFileRoute('/_app/customers')({
   beforeLoad: requirePermission('customers'),
-  head: () => ({ meta: [{ title: 'Customers · Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Customers · Cooked by Ugo Admin' }] }),
   component: CustomersPage,
 })

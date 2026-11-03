@@ -4,6 +4,6 @@ import { OrderHistoryPage } from '@/features/orders/pages/OrderHistoryPage'
 
 export const Route = createFileRoute('/_app/history')({
   beforeLoad: requirePermission('history'),
-  head: () => ({ meta: [{ title: 'Order history · Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Order history · Cooked by Ugo Admin' }] }),
   component: OrderHistoryPage,
 })

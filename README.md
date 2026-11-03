@@ -1,6 +1,6 @@
-# Cook by Ugo Admin
+# Cooked by Ugo Admin
 
-The staff dashboard for Cook by Ugo. It works alongside the
+The staff dashboard for Cooked by Ugo. It works alongside the
 [customer site](https://github.com/idungstanley/cook-by-ugo) and uses the same brand tokens.
 
 All data comes from the [API](https://github.com/idungstanley/api-cooked-by-ugo), which enforces every

@@ -4,6 +4,6 @@ import { ContentPage } from '@/features/content/ContentPage'
 
 export const Route = createFileRoute('/_app/content')({
   beforeLoad: requirePermission('content'),
-  head: () => ({ meta: [{ title: 'Content · Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Content · Cooked by Ugo Admin' }] }),
   component: ContentPage,
 })

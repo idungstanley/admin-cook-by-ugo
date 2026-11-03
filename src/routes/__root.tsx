@@ -26,7 +26,7 @@ const NotFound = () => (
 )
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({ meta: [{ title: 'Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Cooked by Ugo Admin' }] }),
   component: RootLayout,
   notFoundComponent: NotFound,
 })

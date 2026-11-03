@@ -8,6 +8,6 @@ export const Route = createFileRoute('/login')({
     const user = useAuthStore.getState().user
     if (user) throw redirect({ to: HOME_ROUTE[user.role] })
   },
-  head: () => ({ meta: [{ title: 'Sign in · Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Sign in · Cooked by Ugo Admin' }] }),
   component: LoginPage,
 })

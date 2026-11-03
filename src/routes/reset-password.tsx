@@ -8,6 +8,6 @@ const ResetRoute = () => {
 
 export const Route = createFileRoute('/reset-password')({
   validateSearch: (search: Record<string, unknown>) => ({ token: String(search.token ?? '') }),
-  head: () => ({ meta: [{ title: 'Set password · Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Set password · Cooked by Ugo Admin' }] }),
   component: ResetRoute,
 })

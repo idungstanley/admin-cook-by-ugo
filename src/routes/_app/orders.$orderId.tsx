@@ -9,6 +9,6 @@ const OrderRoute = () => {
 
 export const Route = createFileRoute('/_app/orders/$orderId')({
   beforeLoad: requirePermission('orders'),
-  head: () => ({ meta: [{ title: 'Order · Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Order · Cooked by Ugo Admin' }] }),
   component: OrderRoute,
 })

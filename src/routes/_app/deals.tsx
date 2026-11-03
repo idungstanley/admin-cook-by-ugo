@@ -4,6 +4,6 @@ import { DealsPage } from '@/features/deals/DealsPage'
 
 export const Route = createFileRoute('/_app/deals')({
   beforeLoad: requirePermission('deals'),
-  head: () => ({ meta: [{ title: 'Deals · Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Deals · Cooked by Ugo Admin' }] }),
   component: DealsPage,
 })

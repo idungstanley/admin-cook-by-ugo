@@ -4,6 +4,6 @@ import { SettingsPage } from '@/features/settings/SettingsPage'
 
 export const Route = createFileRoute('/_app/settings')({
   beforeLoad: requirePermission('settings'),
-  head: () => ({ meta: [{ title: 'Shop settings · Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Shop settings · Cooked by Ugo Admin' }] }),
   component: SettingsPage,
 })

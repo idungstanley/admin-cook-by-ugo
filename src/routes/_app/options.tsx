@@ -4,6 +4,6 @@ import { OptionsPage } from '@/features/options/OptionsPage'
 
 export const Route = createFileRoute('/_app/options')({
   beforeLoad: requirePermission('options'),
-  head: () => ({ meta: [{ title: 'Options · Cook by Ugo Admin' }] }),
+  head: () => ({ meta: [{ title: 'Options · Cooked by Ugo Admin' }] }),
   component: OptionsPage,
 })

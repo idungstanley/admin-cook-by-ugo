@@ -198,7 +198,7 @@ export const LoginPage = () => {
             one kitchen.
           </span>
         </p>
-        <p className="text-sm text-paper/60">Cook by Ugo admin</p>
+        <p className="text-sm text-paper/60">Cooked by Ugo admin</p>
       </div>
 
       <div className="flex flex-col justify-center px-5 py-8">
