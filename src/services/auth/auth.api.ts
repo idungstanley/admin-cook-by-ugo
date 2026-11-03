@@ -3,6 +3,7 @@ import type { StaffMember } from '@/types'
 
 interface SignedIn {
   user: StaffMember
+  token: string
   requiresTwoFactor?: false
 }
 

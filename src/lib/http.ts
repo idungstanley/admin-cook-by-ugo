@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/stores/auth.store'
+import { sessionToken } from './sessionToken'
 
 export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
 
@@ -16,14 +17,20 @@ const request = async <T>(
   { method = 'GET', body, skipSessionCheck }: RequestOptions = {},
 ) => {
   const isForm = body instanceof FormData
+  const token = sessionToken.get()
+  const headers: Record<string, string> = {}
+  if (body && !isForm) headers['content-type'] = 'application/json'
+  if (token) headers.authorization = `Bearer ${token}`
+
   const response = await fetch(`${API_URL}/api${path}`, {
     method,
     credentials: 'include',
-    headers: body && !isForm ? { 'content-type': 'application/json' } : undefined,
+    headers,
     body: isForm ? body : body === undefined ? undefined : JSON.stringify(body),
   })
 
   if (response.status === 401 && !skipSessionCheck) {
+    sessionToken.clear()
     useAuthStore.getState().signOut()
     window.location.assign('/login')
   }

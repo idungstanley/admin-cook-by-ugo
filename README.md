@@ -83,7 +83,10 @@ src/
 
 ## Deploying
 
-Publish to `admin.cookedbyugo.com`, because staff sign-in only works when the dashboard and API share
-a domain. Set `VITE_API_URL` to `https://api.cookedbyugo.com` before building, then publish `dist`.
-Every path must serve `index.html`. Netlify reads this from `public/_redirects`, and other hosts need
-a rewrite rule from `/*` to `/index.html`.
+Set `VITE_API_URL` to the API address before building, then publish `dist`, and add the
+dashboard's address to the API's `ALLOWED_ORIGINS`. Every path must serve `index.html`. Vercel reads
+this from `vercel.json` and Netlify from `public/_redirects`.
+
+Sign-in works on any domain. When the dashboard and API are on different domains, browsers such as
+Safari refuse the session cookie, so the dashboard also sends the session as a token. It is kept in
+session storage, which clears when the tab closes, and signing out revokes it on the server.

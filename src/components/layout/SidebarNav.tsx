@@ -1,14 +1,16 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { LogOut } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 import { NAV_SECTIONS } from '@/constants/navigation'
 import { ROLE_LABELS, ROLE_PERMISSIONS } from '@/constants/roles'
+import { sessionToken } from '@/lib/sessionToken'
 import { authApi } from '@/services/auth/auth.api'
 import { useAuthStore } from '@/stores/auth.store'
 
 export const SidebarNav = ({ onNavigate }: { onNavigate?: () => void }) => {
   const user = useAuthStore((state) => state.user)
   const signOut = useAuthStore((state) => state.signOut)
+  const navigate = useNavigate()
 
   if (!user) return null
 
@@ -59,7 +61,13 @@ export const SidebarNav = ({ onNavigate }: { onNavigate?: () => void }) => {
           type="button"
           aria-label="Sign out"
           title="Sign out"
-          onClick={() => void authApi.signOut().finally(signOut)}
+          onClick={() =>
+            void authApi.signOut().finally(() => {
+              sessionToken.clear()
+              signOut()
+              void navigate({ to: '/login' })
+            })
+          }
           className="grid size-10 place-items-center rounded-full transition hover:bg-paper/10"
         >
           <LogOut className="size-[18px]" />

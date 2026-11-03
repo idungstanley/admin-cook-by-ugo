@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/fields'
 import { Logo } from '@/components/ui/Logo'
 import { HOME_ROUTE } from '@/constants/roles'
+import { sessionToken } from '@/lib/sessionToken'
 import { authApi } from '@/services/auth/auth.api'
 import { useAuthStore } from '@/stores/auth.store'
 import type { StaffMember } from '@/types'
@@ -23,7 +24,8 @@ const useFinishSignIn = () => {
   const navigate = useNavigate()
   const signIn = useAuthStore((state) => state.signIn)
 
-  return (user: StaffMember) => {
+  return ({ user, token }: { user: StaffMember; token: string }) => {
+    sessionToken.set(token)
     signIn(user)
     void navigate({ to: HOME_ROUTE[user.role] })
   }
@@ -40,7 +42,7 @@ const CredentialsForm = ({ onTwoFactor, onForgot }: CredentialsFormProps) => {
     mutationFn: authApi.signIn,
     onSuccess: (result) => {
       if (result.requiresTwoFactor) onTwoFactor(result.challengeToken)
-      else finish(result.user)
+      else finish(result)
     },
   })
   const {
@@ -103,7 +105,7 @@ const TwoFactorForm = ({
   const [code, setCode] = useState('')
   const verify = useMutation({
     mutationFn: authApi.verifyCode,
-    onSuccess: ({ user }) => finish(user),
+    onSuccess: finish,
   })
 
   return (
