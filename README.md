@@ -80,3 +80,10 @@ src/
 
 - **Allergens:** the seeded lists are not verified. Update each dish with the kitchen's real data.
 - **Delivery zones and fees:** the seeded values are assumptions until the client confirms them.
+
+## Deploying
+
+Publish to `admin.cookedbyugo.com`, because staff sign-in only works when the dashboard and API share
+a domain. Set `VITE_API_URL` to `https://api.cookedbyugo.com` before building, then publish `dist`.
+Every path must serve `index.html`. Netlify reads this from `public/_redirects`, and other hosts need
+a rewrite rule from `/*` to `/index.html`.
