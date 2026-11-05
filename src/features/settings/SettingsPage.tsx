@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Trash2 } from 'lucide-react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { Button } from '@/components/ui/Button'
 import { CardSection } from '@/components/ui/Card'
@@ -14,6 +14,8 @@ import { penceToPounds, poundsToPence } from '@/lib/format'
 import { createId } from '@/lib/ids'
 import { useSaveSettings, useSettings } from '@/services/settings/settings.queries'
 import type { ShopSettings } from '@/types'
+import { DeliveryMap } from './components/DeliveryMap'
+import { PostcodeChecker } from './components/PostcodeChecker'
 
 const money = (label: string) => z.number(`Enter ${label}`).min(0, 'Cannot be negative')
 
@@ -28,37 +30,40 @@ const settingsSchema = z.object({
       label: z.string().trim().min(2, 'Add a label'),
     }),
   ),
-  zones: z.array(
-    z.object({
-      id: z.string(),
-      prefix: z
-        .string()
-        .trim()
-        .toUpperCase()
-        .regex(/^[A-Z]{1,2}\d{1,2}[A-Z]?$/, 'Use a postcode area, like NE1'),
-      fee: money('a fee'),
-      minimumOrder: money('a minimum'),
-      active: z.boolean(),
-    }),
-  ),
+  kitchenPostcode: z
+    .string()
+    .trim()
+    .regex(/^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i, 'Enter the kitchen postcode'),
+  deliveryRadii: z
+    .array(
+      z.object({
+        id: z.string(),
+        maxMiles: z.number('Enter miles').positive('Enter miles').max(50, 'Up to 50 miles'),
+        fee: money('a fee'),
+        minimumOrder: money('a minimum'),
+        active: z.boolean(),
+      }),
+    )
+    .min(1, 'Add at least one delivery radius'),
   freeDeliveryThreshold: money('an amount'),
-  etaMinutes: z.number('Enter minutes').int().positive('Enter minutes'),
-  cardEnabled: z.boolean(),
-  payOnDeliveryEnabled: z.boolean(),
-  payOnDeliveryLimit: money('a limit'),
+  prepMinutes: z.number('Enter minutes').int().min(5, 'At least 5 minutes'),
+  deliveryMinutes: z.number('Enter minutes').int().min(5, 'At least 5 minutes'),
 })
 
 type SettingsValues = z.infer<typeof settingsSchema>
 
 const toFormValues = (settings: ShopSettings): SettingsValues => ({
-  ...settings,
-  zones: settings.zones.map((zone) => ({
-    ...zone,
-    fee: penceToPounds(zone.fee),
-    minimumOrder: penceToPounds(zone.minimumOrder),
+  hours: settings.hours,
+  closures: settings.closures,
+  kitchenPostcode: settings.kitchen.postcode,
+  deliveryRadii: settings.deliveryRadii.map((ring) => ({
+    ...ring,
+    fee: penceToPounds(ring.fee),
+    minimumOrder: penceToPounds(ring.minimumOrder),
   })),
   freeDeliveryThreshold: penceToPounds(settings.freeDeliveryThreshold),
-  payOnDeliveryLimit: penceToPounds(settings.payOnDeliveryLimit),
+  prepMinutes: settings.prepMinutes,
+  deliveryMinutes: settings.deliveryMinutes,
 })
 
 const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
@@ -73,18 +78,18 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
     defaultValues: toFormValues(settings),
   })
   const closures = useFieldArray({ control, name: 'closures', keyName: 'fieldKey' })
-  const zones = useFieldArray({ control, name: 'zones', keyName: 'fieldKey' })
+  const rings = useFieldArray({ control, name: 'deliveryRadii', keyName: 'fieldKey' })
+  const liveRings = useWatch({ control, name: 'deliveryRadii' })
 
   const submit = (values: SettingsValues) =>
     save.mutate({
       ...values,
-      zones: values.zones.map((zone) => ({
-        ...zone,
-        fee: poundsToPence(zone.fee),
-        minimumOrder: poundsToPence(zone.minimumOrder),
+      deliveryRadii: values.deliveryRadii.map((ring) => ({
+        ...ring,
+        fee: poundsToPence(ring.fee),
+        minimumOrder: poundsToPence(ring.minimumOrder),
       })),
       freeDeliveryThreshold: poundsToPence(values.freeDeliveryThreshold),
-      payOnDeliveryLimit: poundsToPence(values.payOnDeliveryLimit),
     })
 
   return (
@@ -156,8 +161,17 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
           </div>
         </CardSection>
 
-        <CardSection title="Delivery rules">
+        <CardSection
+          title="Kitchen and timing"
+          description="Customers see the arrival time as preparation plus delivery."
+        >
           <div className="grid grid-cols-2 gap-3">
+            <TextField
+              label="Kitchen postcode"
+              className="uppercase"
+              error={errors.kitchenPostcode?.message}
+              {...register('kitchenPostcode')}
+            />
             <TextField
               label="Free delivery over (£)"
               type="number"
@@ -166,85 +180,95 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
               {...register('freeDeliveryThreshold', { valueAsNumber: true })}
             />
             <TextField
-              label="Default ETA (minutes)"
+              label="Average preparation (minutes)"
               type="number"
-              error={errors.etaMinutes?.message}
-              {...register('etaMinutes', { valueAsNumber: true })}
+              min="5"
+              error={errors.prepMinutes?.message}
+              {...register('prepMinutes', { valueAsNumber: true })}
+            />
+            <TextField
+              label="Average delivery (minutes)"
+              type="number"
+              min="5"
+              error={errors.deliveryMinutes?.message}
+              {...register('deliveryMinutes', { valueAsNumber: true })}
             />
           </div>
-        </CardSection>
-
-        <CardSection title="Payment methods">
-          <CheckboxField label="Card online" {...register('cardEnabled')} />
-          <CheckboxField label="Pay on delivery" {...register('payOnDeliveryEnabled')} />
-          <TextField
-            label="Largest pay-on-delivery order (£)"
-            type="number"
-            step="0.01"
-            className="mt-2"
-            error={errors.payOnDeliveryLimit?.message}
-            {...register('payOnDeliveryLimit', { valueAsNumber: true })}
-          />
         </CardSection>
       </div>
 
       <CardSection
-        title="Delivery zones"
-        description="Only postcodes in an active zone can order."
+        title="Delivery area"
+        description="Every postcode inside a ring can order, and pays that ring's fee. Distance is measured in a straight line from the kitchen."
         className="xl:col-span-2"
         action={
           <Button
             variant="outline"
             size="sm"
             onClick={() =>
-              zones.append({
-                id: createId('zone'),
-                prefix: '',
-                fee: 2.99,
-                minimumOrder: 12,
+              rings.append({
+                id: createId('radius'),
+                maxMiles: Math.max(0, ...liveRings.map(({ maxMiles }) => maxMiles || 0)) + 2,
+                fee: 5.99,
+                minimumOrder: 15,
                 active: true,
               })
             }
           >
-            <Plus className="size-4" /> Add zone
+            <Plus className="size-4" /> Add ring
           </Button>
         }
       >
-        <div className="flex flex-col gap-3">
-          {zones.fields.map((field, index) => (
-            <div
-              key={field.fieldKey}
-              className="grid grid-cols-2 items-end gap-2 border-b border-line pb-3 last:border-b-0 sm:grid-cols-[1fr_1fr_1fr_auto_2.5rem]"
-            >
-              <TextField
-                label="Postcode area"
-                error={errors.zones?.[index]?.prefix?.message}
-                {...register(`zones.${index}.prefix`)}
-              />
-              <TextField
-                label="Fee (£)"
-                type="number"
-                step="0.01"
-                error={errors.zones?.[index]?.fee?.message}
-                {...register(`zones.${index}.fee`, { valueAsNumber: true })}
-              />
-              <TextField
-                label="Minimum order (£)"
-                type="number"
-                step="0.01"
-                error={errors.zones?.[index]?.minimumOrder?.message}
-                {...register(`zones.${index}.minimumOrder`, { valueAsNumber: true })}
-              />
-              <CheckboxField
-                label="Active"
-                className="h-11"
-                {...register(`zones.${index}.active`)}
-              />
-              <IconButton label="Remove zone" onClick={() => zones.remove(index)}>
-                <Trash2 className="size-4" />
-              </IconButton>
-            </div>
-          ))}
+        <div className="grid items-start gap-4 lg:grid-cols-[1.3fr_1fr]">
+          <DeliveryMap centre={settings.kitchen} radii={liveRings} />
+          <div className="flex flex-col gap-3">
+            {errors.deliveryRadii?.root?.message && (
+              <p role="alert" className="text-xs font-semibold text-jollof-dark">
+                {errors.deliveryRadii.root.message}
+              </p>
+            )}
+            {rings.fields.map((field, index) => (
+              <div
+                key={field.fieldKey}
+                className="grid grid-cols-3 items-end gap-2 border-b border-line pb-3 last:border-b-0"
+              >
+                <TextField
+                  label="Up to (miles)"
+                  type="number"
+                  step="0.5"
+                  error={errors.deliveryRadii?.[index]?.maxMiles?.message}
+                  {...register(`deliveryRadii.${index}.maxMiles`, { valueAsNumber: true })}
+                />
+                <TextField
+                  label="Fee (£)"
+                  type="number"
+                  step="0.01"
+                  error={errors.deliveryRadii?.[index]?.fee?.message}
+                  {...register(`deliveryRadii.${index}.fee`, { valueAsNumber: true })}
+                />
+                <TextField
+                  label="Minimum (£)"
+                  type="number"
+                  step="0.01"
+                  error={errors.deliveryRadii?.[index]?.minimumOrder?.message}
+                  {...register(`deliveryRadii.${index}.minimumOrder`, { valueAsNumber: true })}
+                />
+                <CheckboxField
+                  label="Active"
+                  className="col-span-2 h-9"
+                  {...register(`deliveryRadii.${index}.active`)}
+                />
+                <IconButton
+                  label="Remove ring"
+                  className="justify-self-end"
+                  onClick={() => rings.remove(index)}
+                >
+                  <Trash2 className="size-4" />
+                </IconButton>
+              </div>
+            ))}
+            <PostcodeChecker />
+          </div>
         </div>
       </CardSection>
 

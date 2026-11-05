@@ -61,3 +61,10 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Receipts print edge to edge, without the browser's own header and footer. */
+@media print {
+  @page {
+    margin: 6mm;
+  }
+}

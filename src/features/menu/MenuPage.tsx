@@ -40,7 +40,13 @@ export const MenuPage = () => {
       hideLabelOnMobile: true,
       cell: (dish) => (
         <div className="flex items-center gap-3 text-left">
-          <img src={dish.image} alt="" className="size-12 rounded-xl object-cover" />
+          {dish.image ? (
+            <img src={dish.image} alt="" className="size-12 rounded-xl object-cover" />
+          ) : (
+            <span className="grid size-12 place-items-center rounded-xl bg-shea text-[10px] text-muted">
+              No photo
+            </span>
+          )}
           <div className="min-w-0">
             <p className="font-bold">{dish.name}</p>
             <p className="text-xs text-muted">

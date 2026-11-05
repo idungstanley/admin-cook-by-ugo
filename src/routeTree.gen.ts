@@ -19,8 +19,10 @@ import { Route as AppDealsRouteImport } from './routes/_app/deals'
 import { Route as AppDeliveriesRouteImport } from './routes/_app/deliveries'
 import { Route as AppHistoryRouteImport } from './routes/_app/history'
 import { Route as AppMenuRouteImport } from './routes/_app/menu'
+import { Route as AppOffersRouteImport } from './routes/_app/offers'
 import { Route as AppOptionsRouteImport } from './routes/_app/options'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
+import { Route as AppReviewsRouteImport } from './routes/_app/reviews'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppStaffRouteImport } from './routes/_app/staff'
 import { Route as AppOrdersIndexRouteImport } from './routes/_app/orders.index'
@@ -75,6 +77,11 @@ const AppMenuRoute = AppMenuRouteImport.update({
   path: '/menu',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOffersRoute = AppOffersRouteImport.update({
+  id: '/offers',
+  path: '/offers',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOptionsRoute = AppOptionsRouteImport.update({
   id: '/options',
   path: '/options',
@@ -83,6 +90,11 @@ const AppOptionsRoute = AppOptionsRouteImport.update({
 const AppReportsRoute = AppReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReviewsRoute = AppReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -116,8 +128,10 @@ export interface FileRoutesByFullPath {
   '/deliveries': typeof AppDeliveriesRoute
   '/history': typeof AppHistoryRoute
   '/menu': typeof AppMenuRoute
+  '/offers': typeof AppOffersRoute
   '/options': typeof AppOptionsRoute
   '/reports': typeof AppReportsRoute
+  '/reviews': typeof AppReviewsRoute
   '/settings': typeof AppSettingsRoute
   '/staff': typeof AppStaffRoute
   '/orders/$orderId': typeof AppOrdersOrderIdRoute
@@ -132,8 +146,10 @@ export interface FileRoutesByTo {
   '/deliveries': typeof AppDeliveriesRoute
   '/history': typeof AppHistoryRoute
   '/menu': typeof AppMenuRoute
+  '/offers': typeof AppOffersRoute
   '/options': typeof AppOptionsRoute
   '/reports': typeof AppReportsRoute
+  '/reviews': typeof AppReviewsRoute
   '/settings': typeof AppSettingsRoute
   '/staff': typeof AppStaffRoute
   '/': typeof AppIndexRoute
@@ -151,8 +167,10 @@ export interface FileRoutesById {
   '/_app/deliveries': typeof AppDeliveriesRoute
   '/_app/history': typeof AppHistoryRoute
   '/_app/menu': typeof AppMenuRoute
+  '/_app/offers': typeof AppOffersRoute
   '/_app/options': typeof AppOptionsRoute
   '/_app/reports': typeof AppReportsRoute
+  '/_app/reviews': typeof AppReviewsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/staff': typeof AppStaffRoute
   '/_app/': typeof AppIndexRoute
@@ -171,8 +189,10 @@ export interface FileRouteTypes {
     | '/deliveries'
     | '/history'
     | '/menu'
+    | '/offers'
     | '/options'
     | '/reports'
+    | '/reviews'
     | '/settings'
     | '/staff'
     | '/orders/$orderId'
@@ -187,8 +207,10 @@ export interface FileRouteTypes {
     | '/deliveries'
     | '/history'
     | '/menu'
+    | '/offers'
     | '/options'
     | '/reports'
+    | '/reviews'
     | '/settings'
     | '/staff'
     | '/'
@@ -205,8 +227,10 @@ export interface FileRouteTypes {
     | '/_app/deliveries'
     | '/_app/history'
     | '/_app/menu'
+    | '/_app/offers'
     | '/_app/options'
     | '/_app/reports'
+    | '/_app/reviews'
     | '/_app/settings'
     | '/_app/staff'
     | '/_app/'
@@ -292,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMenuRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/offers': {
+      id: '/_app/offers'
+      path: '/offers'
+      fullPath: '/offers'
+      preLoaderRoute: typeof AppOffersRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/options': {
       id: '/_app/options'
       path: '/options'
@@ -304,6 +335,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reviews': {
+      id: '/_app/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof AppReviewsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/settings': {
@@ -344,8 +382,10 @@ interface AppRouteChildren {
   AppDeliveriesRoute: typeof AppDeliveriesRoute
   AppHistoryRoute: typeof AppHistoryRoute
   AppMenuRoute: typeof AppMenuRoute
+  AppOffersRoute: typeof AppOffersRoute
   AppOptionsRoute: typeof AppOptionsRoute
   AppReportsRoute: typeof AppReportsRoute
+  AppReviewsRoute: typeof AppReviewsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStaffRoute: typeof AppStaffRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -360,8 +400,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppDeliveriesRoute: AppDeliveriesRoute,
   AppHistoryRoute: AppHistoryRoute,
   AppMenuRoute: AppMenuRoute,
+  AppOffersRoute: AppOffersRoute,
   AppOptionsRoute: AppOptionsRoute,
   AppReportsRoute: AppReportsRoute,
+  AppReviewsRoute: AppReviewsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStaffRoute: AppStaffRoute,
   AppIndexRoute: AppIndexRoute,

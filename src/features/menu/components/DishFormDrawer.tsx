@@ -18,13 +18,20 @@ import {
 } from '@/services/menu/menu.queries'
 import type { Dish, DishBadge } from '@/types'
 
+/** Only the name, category and price are needed. Everything else can be added later. */
 const dishSchema = z.object({
   name: z.string().trim().min(2, 'Enter a dish name'),
   categoryId: z.string().min(1, 'Choose a category'),
-  description: z.string().trim().min(5, 'Add a short description'),
+  description: z.string().trim().max(500, 'Keep it under 500 characters'),
   price: z.number('Enter a price').positive('Enter a price'),
-  kcal: z.number('Enter the calories').int().min(0),
-  image: z.string().min(1, 'Choose an image'),
+  // An empty number box arrives as NaN, which means "not given".
+  kcal: z
+    .number()
+    .int('Use a whole number')
+    .min(0)
+    .optional()
+    .or(z.nan().transform(() => undefined)),
+  image: z.string(),
   badges: z.array(z.string()),
   allergens: z.array(z.string()),
   optionGroupIds: z.array(z.string()),
@@ -66,8 +73,13 @@ const DishForm = ({ dish, onClose }: DishFormProps) => {
   })
   const image = useWatch({ control, name: 'image' })
 
-  const submit = ({ price, badges, ...values }: DishValues) => {
-    const input = { ...values, price: poundsToPence(price), badges: badges as DishBadge[] }
+  const submit = ({ price, badges, kcal, ...values }: DishValues) => {
+    const input = {
+      ...values,
+      kcal: kcal ?? null,
+      price: poundsToPence(price),
+      badges: badges as DishBadge[],
+    }
     if (dish) updateDish.mutate({ id: dish.id, input }, { onSuccess: onClose })
     else createDish.mutate(input, { onSuccess: onClose })
   }
@@ -77,15 +89,10 @@ const DishForm = ({ dish, onClose }: DishFormProps) => {
       <OverlayHeader title={dish ? 'Edit dish' : 'Add dish'} onClose={onClose} />
       <OverlayBody className="flex flex-col gap-4">
         <ImageField
-          label="Photo"
+          label="Photo (optional)"
           value={image}
           onChange={(url) => setValue('image', url, { shouldValidate: true })}
         />
-        {errors.image && (
-          <p role="alert" className="text-xs font-semibold text-jollof-dark">
-            {errors.image.message}
-          </p>
-        )}
         <TextField label="Name" error={errors.name?.message} {...register('name')} />
         <SelectField
           label="Category"
@@ -100,7 +107,7 @@ const DishForm = ({ dish, onClose }: DishFormProps) => {
           ))}
         </SelectField>
         <TextAreaField
-          label="Description"
+          label="Description (optional)"
           error={errors.description?.message}
           {...register('description')}
         />
@@ -114,7 +121,7 @@ const DishForm = ({ dish, onClose }: DishFormProps) => {
             {...register('price', { valueAsNumber: true })}
           />
           <TextField
-            label="Calories (kcal)"
+            label="Calories (optional)"
             type="number"
             min="0"
             error={errors.kcal?.message}

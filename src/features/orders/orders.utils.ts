@@ -8,8 +8,20 @@ const ACTIVE_STATUSES: OrderStatus[] = ['received', 'preparing', 'out-for-delive
 
 export const isActiveOrder = ({ status }: Order) => ACTIVE_STATUSES.includes(status)
 
+const MINUTE_MS = 60_000
+const DEFAULT_DELIVERY_MINUTES = 20
+
+/** When the customer expects the food: their chosen slot, or order time plus the wait. */
+export const dueAt = (order: Pick<Order, 'createdAt' | 'etaMinutes' | 'scheduledFor'>) =>
+  order.scheduledFor ?? order.createdAt + order.etaMinutes * MINUTE_MS
+
+/** When the food must leave the kitchen to arrive on time. */
+export const readyBy = (order: Order) =>
+  dueAt(order) - (order.deliveryMinutes ?? DEFAULT_DELIVERY_MINUTES) * MINUTE_MS
+
+/** Late only once the promised arrival time has passed, so scheduled orders are not flagged early. */
 export const isOverdue = (order: Order, now = Date.now()) =>
-  isActiveOrder(order) && now - order.createdAt > order.etaMinutes * 60_000
+  isActiveOrder(order) && now > dueAt(order)
 
 export const getBoardOrders = (orders: Order[], statuses: OrderStatus[], now = Date.now()) =>
   orders

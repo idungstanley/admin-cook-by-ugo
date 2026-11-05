@@ -1,7 +1,8 @@
 import { http } from '@/lib/http'
 import type { Category, Dish, OptionGroup } from '@/types'
 
-export type DishInput = Omit<Dish, 'id' | 'soldOut'>
+/** `kcal: null` clears a calorie count that was set before. */
+export type DishInput = Omit<Dish, 'id' | 'soldOut' | 'kcal'> & { kcal: number | null }
 export type OptionGroupInput = Omit<OptionGroup, 'id'> & { dishIds: string[] }
 
 export const menuApi = {

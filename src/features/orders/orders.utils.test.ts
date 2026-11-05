@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { toCsv } from '@/lib/csv'
 import type { Order } from '@/types'
-import { filterOrders, getBoardOrders, getRefundableAmount, isOverdue } from './orders.utils'
+import {
+  dueAt,
+  filterOrders,
+  getBoardOrders,
+  getRefundableAmount,
+  isOverdue,
+  readyBy,
+} from './orders.utils'
 
 const NOW = new Date('2026-11-01T18:00:00').getTime()
 
@@ -50,6 +57,13 @@ describe('board', () => {
     const late = NOW - 41 * 60_000
     expect(isOverdue(order({ createdAt: late }), NOW)).toBe(true)
     expect(isOverdue(order({ createdAt: late, status: 'delivered' }), NOW)).toBe(false)
+  })
+
+  it('waits for the chosen slot before flagging a scheduled order', () => {
+    const placedEarly = order({ createdAt: NOW - 3 * 3_600_000, scheduledFor: NOW + 600_000 })
+    expect(isOverdue(placedEarly, NOW)).toBe(false)
+    expect(dueAt(placedEarly)).toBe(NOW + 600_000)
+    expect(readyBy({ ...placedEarly, deliveryMinutes: 25 })).toBe(NOW + 600_000 - 25 * 60_000)
   })
 
   it('drops older delivered orders and puts the oldest ticket first', () => {

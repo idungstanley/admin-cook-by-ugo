@@ -34,9 +34,19 @@ export type PaymentMethod = 'card' | 'on-delivery'
 export type PaymentStatus = 'pending' | 'paid' | 'due' | 'partially-refunded' | 'refunded'
 export type CollectedBy = 'cash' | 'card'
 
+export interface OrderItemOption {
+  groupTitle: string
+  label: string
+  price: Pence
+}
+
 export interface OrderItem {
   id: string
   name: string
+  /** The dish before options. Orders placed before options were itemised do not have it. */
+  basePrice?: Pence
+  options?: OrderItemOption[]
+  note?: string
   summary?: string
   quantity: number
   unitPrice: Pence
@@ -62,14 +72,20 @@ export interface Order {
   allergyNote?: string
   items: OrderItem[]
   subtotal: Pence
+  discount?: Pence
+  appliedOffers?: { offerId: string; name: string; discount: Pence; freeDelivery: boolean }[]
   deliveryFee: Pence
   total: Pence
+  distanceMiles?: number
   paymentMethod: PaymentMethod
   paymentStatus: PaymentStatus
   collectedBy?: CollectedBy
   refundedAmount: Pence
   scheduledFor?: number
+  /** Minutes from order to door, for orders wanted as soon as possible. */
   etaMinutes: number
+  /** Time on the road, so the kitchen knows when the food must be ready. */
+  deliveryMinutes?: number
   riderId?: string
   status: OrderStatus
   createdAt: number
@@ -89,7 +105,7 @@ export interface Dish {
   name: string
   description: string
   price: Pence
-  kcal: number
+  kcal?: number
   image: string
   badges: DishBadge[]
   allergens: string[]
@@ -101,6 +117,7 @@ export interface OptionChoice {
   id: string
   label: string
   priceDelta: Pence
+  image?: string
 }
 
 export interface OptionGroup {
@@ -142,9 +159,10 @@ export interface Closure {
   label: string
 }
 
-export interface DeliveryZone {
+/** One ring on the delivery map. A postcode pays the fee of the smallest ring it falls inside. */
+export interface DeliveryRadius {
   id: string
-  prefix: string
+  maxMiles: number
   fee: Pence
   minimumOrder: Pence
   active: boolean
@@ -154,12 +172,66 @@ export interface ShopSettings {
   ordersPaused: boolean
   hours: DayHours[]
   closures: Closure[]
-  zones: DeliveryZone[]
+  kitchen: { postcode: string; lat: number; lng: number }
+  deliveryRadii: DeliveryRadius[]
   freeDeliveryThreshold: Pence
-  etaMinutes: number
-  cardEnabled: boolean
-  payOnDeliveryEnabled: boolean
-  payOnDeliveryLimit: Pence
+  prepMinutes: number
+  deliveryMinutes: number
+}
+
+export interface SettingsInput extends Omit<ShopSettings, 'ordersPaused' | 'kitchen'> {
+  kitchenPostcode: string
+}
+
+export type OfferType = 'bogo' | 'percent' | 'amount' | 'free-delivery'
+
+export interface Offer {
+  id: string
+  name: string
+  type: OfferType
+  /** Percent for `percent`, pence for `amount`. */
+  value: number
+  dishIds: string[]
+  minSubtotal: Pence
+  startsAt?: string
+  endsAt?: string
+  active: boolean
+  createdAt: string
+}
+
+export interface OfferInput {
+  name: string
+  type: OfferType
+  value: number
+  dishIds: string[]
+  minSubtotal: Pence
+  startsAt: number | null
+  endsAt: number | null
+  active: boolean
+}
+
+export interface Review {
+  id: string
+  orderId: string
+  orderNumber: string
+  orderTotal: Pence
+  customerId: string
+  displayName: string
+  rating: number
+  comment?: string
+  likedItems: string[]
+  reply?: string
+  repliedAt?: number
+  repliedBy?: string
+  hidden: boolean
+  createdAt: number
+  customerOrders: number
+}
+
+export interface ReviewSummary {
+  average: number
+  count: number
+  breakdown: { stars: number; count: number }[]
 }
 
 export interface Customer {

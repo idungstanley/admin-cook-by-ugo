@@ -33,11 +33,24 @@ const startOfDay = (time: number) => new Date(time).setHours(0, 0, 0, 0)
 export const percentChange = (current: number, previous: number) =>
   previous === 0 ? null : Math.round(((current - previous) / previous) * 100)
 
-export const buildReport = (orders: Order[], days: number, now = Date.now()) => {
-  const start = addDays(startOfDay(now), 1 - days)
+const DAY_MS = 86_400_000
+
+/** Whole days from the start of `from` to the end of `to`, both included. */
+export const daysBetween = (from: number, to: number) =>
+  Math.max(1, Math.round((startOfDay(to) - startOfDay(from)) / DAY_MS) + 1)
+
+/** The last `days` days up to now. */
+export const buildReport = (orders: Order[], days: number, now = Date.now()) =>
+  buildReportBetween(orders, addDays(startOfDay(now), 1 - days), now)
+
+/** Any period, compared with the same number of days just before it. */
+export const buildReportBetween = (orders: Order[], from: number, to: number) => {
+  const start = startOfDay(from)
+  const end = Math.min(addDays(startOfDay(to), 1) - 1, Math.max(to, start))
+  const days = daysBetween(start, end)
   const previousStart = addDays(start, -days)
   const counted = orders.filter(({ status }) => status !== 'cancelled')
-  const current = counted.filter(({ createdAt }) => createdAt >= start && createdAt <= now)
+  const current = counted.filter(({ createdAt }) => createdAt >= start && createdAt <= end)
   const previous = counted.filter(
     ({ createdAt }) => createdAt >= previousStart && createdAt < start,
   )
@@ -64,6 +77,7 @@ export const buildReport = (orders: Order[], days: number, now = Date.now()) => 
 
   const salesBy = (method: PaymentMethod) =>
     netSales(current.filter(({ paymentMethod }) => paymentMethod === method))
+  const discounted = current.filter(({ discount = 0 }) => discount > 0)
 
   return {
     sales,
@@ -75,6 +89,11 @@ export const buildReport = (orders: Order[], days: number, now = Date.now()) => 
     daily,
     topDishes: [...dishTotals.values()].sort((a, b) => b.quantity - a.quantity),
     payment: { card: salesBy('card'), onDelivery: salesBy('on-delivery') },
+    offers: {
+      orders: discounted.length,
+      savings: discounted.reduce((sum, { discount = 0 }) => sum + discount, 0),
+    },
+    days,
   }
 }
 

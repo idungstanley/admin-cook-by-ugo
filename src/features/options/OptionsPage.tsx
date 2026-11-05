@@ -1,13 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CheckboxField, TextField } from '@/components/ui/fields'
+import { ImageField } from '@/components/ui/ImageField'
 import { IconButton } from '@/components/ui/IconButton'
 import { Drawer, OverlayBody, OverlayFooter, OverlayHeader } from '@/components/ui/Overlay'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -33,6 +34,7 @@ const groupSchema = z.object({
         id: z.string(),
         label: z.string().trim().min(1, 'Enter a label'),
         price: z.number('Enter a price').min(0, 'Cannot be negative'),
+        image: z.string(),
       }),
     )
     .min(1, 'Add at least one choice'),
@@ -53,6 +55,7 @@ const GroupForm = ({ group, dishes, onClose }: GroupFormProps) => {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm<GroupValues>({
     resolver: zodResolver(groupSchema),
@@ -61,10 +64,11 @@ const GroupForm = ({ group, dishes, onClose }: GroupFormProps) => {
       required: group?.required ?? false,
       maxChoices: group?.maxChoices ?? 1,
       choices:
-        group?.choices.map(({ id, label, priceDelta }) => ({
+        group?.choices.map(({ id, label, priceDelta, image }) => ({
           id,
           label,
           price: penceToPounds(priceDelta),
+          image: image ?? '',
         })) ?? [],
       dishIds: dishes
         .filter(({ optionGroupIds }) => group && optionGroupIds.includes(group.id))
@@ -76,17 +80,28 @@ const GroupForm = ({ group, dishes, onClose }: GroupFormProps) => {
     name: 'choices',
     keyName: 'fieldKey',
   })
+  const choices = useWatch({ control, name: 'choices' })
 
-  const submit = ({ choices, ...values }: GroupValues) =>
+  /** A side or soup that is also on the menu keeps its name, price and photo in step. */
+  const copyDish = (index: number, dishId: string) => {
+    const dish = dishes.find(({ id }) => id === dishId)
+    if (!dish) return
+    setValue(`choices.${index}.label`, dish.name, { shouldValidate: true })
+    setValue(`choices.${index}.price`, penceToPounds(dish.price), { shouldValidate: true })
+    setValue(`choices.${index}.image`, dish.image)
+  }
+
+  const submit = ({ choices: entries, ...values }: GroupValues) =>
     save.mutate(
       {
         id: group?.id,
         input: {
           ...values,
-          choices: choices.map(({ id, label, price }) => ({
+          choices: entries.map(({ id, label, price, image }) => ({
             id,
             label,
             priceDelta: poundsToPence(price),
+            image: image || undefined,
           })),
         },
       },
@@ -111,11 +126,35 @@ const GroupForm = ({ group, dishes, onClose }: GroupFormProps) => {
 
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-[13px] font-semibold">Choices</legend>
+          <p className="-mt-1 mb-1 text-xs text-muted">
+            Add a photo and price so customers can see what they are adding, as in the basket.
+          </p>
           {fields.map((field, index) => (
             <div
               key={field.fieldKey}
-              className="grid grid-cols-[1fr_6.5rem_2.5rem] items-end gap-2"
+              className="grid grid-cols-[1fr_6.5rem_2.5rem] items-end gap-2 border-b border-line pb-3 last:border-b-0"
             >
+              <div className="col-span-3 flex flex-wrap items-center justify-between gap-2">
+                <ImageField
+                  compact
+                  label={`Photo for choice ${index + 1}`}
+                  value={choices[index]?.image ?? ''}
+                  onChange={(url) => setValue(`choices.${index}.image`, url)}
+                />
+                <select
+                  aria-label="Copy a dish"
+                  value=""
+                  onChange={(event) => copyDish(index, event.target.value)}
+                  className="h-9 max-w-[12rem] rounded-xl border border-line bg-paper px-2 text-xs"
+                >
+                  <option value="">Copy a dish...</option>
+                  {dishes.map(({ id, name }) => (
+                    <option key={id} value={id}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <TextField
                 label="Label"
                 error={errors.choices?.[index]?.label?.message}
@@ -143,7 +182,7 @@ const GroupForm = ({ group, dishes, onClose }: GroupFormProps) => {
             variant="outline"
             size="sm"
             className="self-start"
-            onClick={() => append({ id: createId('choice'), label: '', price: 0 })}
+            onClick={() => append({ id: createId('choice'), label: '', price: 0, image: '' })}
           >
             <Plus className="size-4" /> Add choice
           </Button>
@@ -210,9 +249,14 @@ export const OptionsPage = () => {
               </Badge>
             </div>
             <ul className="my-3 flex flex-col gap-1 text-sm">
-              {entry.choices.map(({ id, label, priceDelta }) => (
-                <li key={id} className="flex justify-between">
-                  <span>{label}</span>
+              {entry.choices.map(({ id, label, priceDelta, image }) => (
+                <li key={id} className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    {image && (
+                      <img src={image} alt="" className="size-6 rounded-full object-cover" />
+                    )}
+                    {label}
+                  </span>
                   <span className="text-muted">
                     {priceDelta ? `+${formatPrice(priceDelta)}` : 'Included'}
                   </span>

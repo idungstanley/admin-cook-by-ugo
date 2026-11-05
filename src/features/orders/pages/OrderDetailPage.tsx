@@ -7,16 +7,17 @@ import { SelectField } from '@/components/ui/fields'
 import { PageSkeleton } from '@/components/ui/Skeleton'
 import { ErrorMessage } from '@/components/ui/StatusMessage'
 import { usePermission } from '@/hooks/usePermission'
-import { formatDateTime, formatPrice } from '@/lib/format'
+import { formatDateTime, formatPrice, formatTime } from '@/lib/format'
 import { useAssignRider, useOrder, useUpdateEta } from '@/services/orders/orders.queries'
 import { useRiders } from '@/services/staff/staff.queries'
 import { AdvanceOrderButton } from '../components/AdvanceOrderButton'
 import { KitchenTicket } from '../components/KitchenTicket'
 import { AllergyAlert, OrderStatusBadge, PaymentBadge } from '../components/OrderBadges'
 import { CancelOrderDialog, RefundDialog } from '../components/OrderDialogs'
-import { getRefundableAmount, isActiveOrder } from '../orders.utils'
+import { OrderItemLines } from '../components/OrderItemLines'
+import { dueAt, getRefundableAmount, isActiveOrder, readyBy } from '../orders.utils'
 
-const ETA_OPTIONS = [20, 30, 40, 50, 60, 75, 90]
+const ETA_OPTIONS = [20, 30, 40, 50, 60, 75, 90, 120]
 
 const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex justify-between gap-4 py-1 text-sm">
@@ -39,6 +40,7 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
 
   const active = isActiveOrder(order)
   const refundable = getRefundableAmount(order)
+  const offerName = order.appliedOffers?.find(({ discount }) => discount > 0)?.name
 
   return (
     <>
@@ -62,7 +64,7 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => window.print()}>
-              <Printer className="size-4" /> Print ticket
+              <Printer className="size-4" /> Print receipt
             </Button>
             <AdvanceOrderButton order={order} />
           </div>
@@ -76,26 +78,12 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
                   <AllergyAlert note={order.allergyNote} />
                 </div>
               )}
-              <ul>
-                {order.items.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex justify-between gap-4 border-b border-line py-2.5 text-sm"
-                  >
-                    <span>
-                      <strong>{item.quantity} ×</strong> {item.name}
-                      {item.summary && (
-                        <span className="block text-xs text-muted">{item.summary}</span>
-                      )}
-                    </span>
-                    <span className="font-semibold">
-                      {formatPrice(item.unitPrice * item.quantity)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <dl className="mt-2">
+              <OrderItemLines items={order.items} />
+              <dl className="mt-2 border-t border-line pt-2">
                 <Row label="Subtotal">{formatPrice(order.subtotal)}</Row>
+                {order.discount ? (
+                  <Row label={offerName ?? 'Offer'}>−{formatPrice(order.discount)}</Row>
+                ) : null}
                 <Row label="Delivery">
                   {order.deliveryFee ? formatPrice(order.deliveryFee) : 'Free'}
                 </Row>
@@ -121,6 +109,18 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
           </div>
 
           <div className="flex flex-col gap-4">
+            <CardSection title="Timing">
+              <dl>
+                <Row label={order.scheduledFor ? 'Scheduled for' : 'Due (ASAP)'}>
+                  {formatDateTime(dueAt(order))}
+                </Row>
+                <Row label="Food ready by">{formatTime(readyBy(order))}</Row>
+                {order.distanceMiles !== undefined && (
+                  <Row label="Distance">{order.distanceMiles} miles</Row>
+                )}
+              </dl>
+            </CardSection>
+
             <CardSection title="Customer">
               <p className="font-bold">{order.customerName}</p>
               <p className="text-sm">
@@ -157,21 +157,23 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
                     </option>
                   ))}
                 </SelectField>
-                <SelectField
-                  label="ETA from order time"
-                  value={order.etaMinutes}
-                  onChange={(event) =>
-                    updateEta.mutate({ orderId, etaMinutes: Number(event.target.value) })
-                  }
-                >
-                  {[...new Set([...ETA_OPTIONS, order.etaMinutes])]
-                    .sort((a, b) => a - b)
-                    .map((minutes) => (
-                      <option key={minutes} value={minutes}>
-                        {minutes} minutes
-                      </option>
-                    ))}
-                </SelectField>
+                {!order.scheduledFor && (
+                  <SelectField
+                    label="Minutes from order to door"
+                    value={order.etaMinutes}
+                    onChange={(event) =>
+                      updateEta.mutate({ orderId, etaMinutes: Number(event.target.value) })
+                    }
+                  >
+                    {[...new Set([...ETA_OPTIONS, order.etaMinutes])]
+                      .sort((a, b) => a - b)
+                      .map((minutes) => (
+                        <option key={minutes} value={minutes}>
+                          {minutes} minutes
+                        </option>
+                      ))}
+                  </SelectField>
+                )}
               </Card>
             )}
 

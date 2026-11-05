@@ -6,6 +6,8 @@ export const queryKeys = {
   dishes: ['dishes'] as const,
   optionGroups: ['option-groups'] as const,
   deals: ['deals'] as const,
+  offers: ['offers'] as const,
+  reviews: ['reviews'] as const,
   settings: ['settings'] as const,
   customers: ['customers'] as const,
   content: ['content'] as const,

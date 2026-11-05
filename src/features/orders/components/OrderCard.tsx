@@ -4,9 +4,10 @@ import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/cn'
 import { formatAge, formatPrice, formatTime } from '@/lib/format'
 import type { Order } from '@/types'
-import { isOverdue } from '../orders.utils'
+import { dueAt, isOverdue, readyBy } from '../orders.utils'
 import { AdvanceOrderButton } from './AdvanceOrderButton'
 import { AllergyAlert } from './OrderBadges'
+import { OrderItemLines } from './OrderItemLines'
 
 export const OrderCard = ({ order }: { order: Order }) => {
   const overdue = isOverdue(order)
@@ -27,23 +28,16 @@ export const OrderCard = ({ order }: { order: Order }) => {
       </div>
       <p className="text-[13px] text-muted">{order.customerName}</p>
 
-      <ul className="my-2.5 flex flex-col gap-1 text-sm">
-        {order.items.map((item) => (
-          <li key={item.id}>
-            <span className="font-bold">{item.quantity} ×</span> {item.name}
-            {item.summary && <span className="block pl-6 text-xs text-muted">{item.summary}</span>}
-          </li>
-        ))}
-      </ul>
+      <OrderItemLines items={order.items} showPrices={false} className="my-1.5" />
 
       {order.allergyNote && <AllergyAlert note={order.allergyNote} />}
 
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
         <span className="inline-flex items-center gap-1">
           <Clock className="size-3.5" aria-hidden />
-          {order.scheduledFor
-            ? `For ${formatTime(order.scheduledFor)}`
-            : formatAge(order.createdAt)}
+          {order.scheduledFor ? 'For' : 'Due'} {formatTime(dueAt(order))} · ready by{' '}
+          {formatTime(readyBy(order))}
+          <span className="text-muted/70">({formatAge(order.createdAt)})</span>
         </span>
         {overdue && <Badge tone="jollof">Overdue</Badge>}
         {order.paymentStatus === 'due' && (
