@@ -45,5 +45,12 @@ export const useRecordCollection = () =>
     success: 'Payment recorded',
   })
 
+export const useRequestChanges = () =>
+  useAppMutation({
+    mutationFn: ordersApi.requestChanges,
+    invalidate: [...invalidate, queryKeys.dishes],
+    success: 'Sent to the customer. The order waits for their answer.',
+  })
+
 export const useCancelOrder = () =>
   useAppMutation({ mutationFn: ordersApi.cancel, invalidate, success: 'Order cancelled' })

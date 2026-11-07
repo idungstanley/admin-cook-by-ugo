@@ -4,8 +4,9 @@ import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/cn'
 import { formatAge, formatPrice, formatTime } from '@/lib/format'
 import type { Order } from '@/types'
-import { dueAt, isOverdue, readyBy } from '../orders.utils'
+import { dueAt, isOverdue, readyBy, waitingIds } from '../orders.utils'
 import { AdvanceOrderButton } from './AdvanceOrderButton'
+import { NewOrderActions } from './NewOrderActions'
 import { AllergyAlert } from './OrderBadges'
 import { OrderItemLines } from './OrderItemLines'
 
@@ -28,7 +29,12 @@ export const OrderCard = ({ order }: { order: Order }) => {
       </div>
       <p className="text-[13px] text-muted">{order.customerName}</p>
 
-      <OrderItemLines items={order.items} showPrices={false} className="my-1.5" />
+      <OrderItemLines
+        items={order.items}
+        showPrices={false}
+        unavailableIds={waitingIds(order)}
+        className="my-1.5"
+      />
 
       {order.allergyNote && <AllergyAlert note={order.allergyNote} />}
 
@@ -47,7 +53,11 @@ export const OrderCard = ({ order }: { order: Order }) => {
 
       {order.status !== 'delivered' && (
         <div className="mt-3">
-          <AdvanceOrderButton order={order} size="md" fullWidth />
+          {['received', 'awaiting-customer'].includes(order.status) ? (
+            <NewOrderActions order={order} fullWidth />
+          ) : (
+            <AdvanceOrderButton order={order} size="md" fullWidth />
+          )}
         </div>
       )}
     </article>

@@ -4,6 +4,7 @@ import type { BadgeTone } from '@/components/ui/Badge'
 export const ORDER_STATUS_META: Record<OrderStatus, { label: string; tone: BadgeTone }> = {
   'pending-payment': { label: 'Awaiting payment', tone: 'neutral' },
   received: { label: 'New', tone: 'jollof' },
+  'awaiting-customer': { label: 'Waiting for customer', tone: 'indigo' },
   preparing: { label: 'Preparing', tone: 'gold' },
   'out-for-delivery': { label: 'Out for delivery', tone: 'indigo' },
   delivered: { label: 'Delivered', tone: 'ewedu' },
@@ -19,7 +20,7 @@ export const PAYMENT_STATUS_META: Record<PaymentStatus, { label: string; tone: B
 }
 
 export const BOARD_COLUMNS: { id: string; title: string; statuses: OrderStatus[] }[] = [
-  { id: 'new', title: 'New', statuses: ['received'] },
+  { id: 'new', title: 'New', statuses: ['received', 'awaiting-customer'] },
   { id: 'preparing', title: 'Preparing', statuses: ['preparing'] },
   { id: 'out', title: 'Out for delivery', statuses: ['out-for-delivery'] },
   { id: 'done', title: 'Done', statuses: ['delivered'] },

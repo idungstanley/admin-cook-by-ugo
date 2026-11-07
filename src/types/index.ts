@@ -29,7 +29,24 @@ export interface StaffMember {
 }
 
 export type OrderStatus =
-  'pending-payment' | 'received' | 'preparing' | 'out-for-delivery' | 'delivered' | 'cancelled'
+  | 'pending-payment'
+  | 'received'
+  | 'awaiting-customer'
+  | 'preparing'
+  | 'out-for-delivery'
+  | 'delivered'
+  | 'cancelled'
+
+/** The kitchen's request to change an order after something ran out, and how it ended. */
+export interface OrderAmendment {
+  state: 'waiting' | 'awaiting-payment' | 'resolved'
+  unavailableItemIds: string[]
+  message?: string
+  requestedAt: number
+  requestedBy: string
+  resolution?: 'removed' | 'replaced' | 'cancelled'
+  resolvedAt?: number
+}
 export type PaymentMethod = 'card' | 'on-delivery'
 export type PaymentStatus = 'pending' | 'paid' | 'due' | 'partially-refunded' | 'refunded'
 export type CollectedBy = 'cash' | 'card'
@@ -88,6 +105,7 @@ export interface Order {
   deliveryMinutes?: number
   riderId?: string
   status: OrderStatus
+  amendment?: OrderAmendment
   createdAt: number
   events: OrderEvent[]
 }

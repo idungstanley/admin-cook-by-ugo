@@ -14,8 +14,9 @@ import { AdvanceOrderButton } from '../components/AdvanceOrderButton'
 import { KitchenTicket } from '../components/KitchenTicket'
 import { AllergyAlert, OrderStatusBadge, PaymentBadge } from '../components/OrderBadges'
 import { CancelOrderDialog, RefundDialog } from '../components/OrderDialogs'
+import { NewOrderActions } from '../components/NewOrderActions'
 import { OrderItemLines } from '../components/OrderItemLines'
-import { dueAt, getRefundableAmount, isActiveOrder, readyBy } from '../orders.utils'
+import { dueAt, getRefundableAmount, isActiveOrder, readyBy, waitingIds } from '../orders.utils'
 
 const ETA_OPTIONS = [20, 30, 40, 50, 60, 75, 90, 120]
 
@@ -66,7 +67,11 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
             <Button variant="outline" onClick={() => window.print()}>
               <Printer className="size-4" /> Print receipt
             </Button>
-            <AdvanceOrderButton order={order} />
+            {['received', 'awaiting-customer', 'preparing'].includes(order.status) ? (
+              <NewOrderActions order={order} />
+            ) : (
+              <AdvanceOrderButton order={order} />
+            )}
           </div>
         </div>
 
@@ -78,7 +83,13 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
                   <AllergyAlert note={order.allergyNote} />
                 </div>
               )}
-              <OrderItemLines items={order.items} />
+              {order.amendment && order.amendment.state !== 'resolved' && (
+                <p className="mb-3 rounded-xl bg-indigo-soft px-3 py-2 text-sm text-indigo">
+                  Asked the customer about the crossed-out items
+                  {order.amendment.message ? `: “${order.amendment.message}”` : '.'}
+                </p>
+              )}
+              <OrderItemLines items={order.items} unavailableIds={waitingIds(order)} />
               <dl className="mt-2 border-t border-line pt-2">
                 <Row label="Subtotal">{formatPrice(order.subtotal)}</Row>
                 {order.discount ? (

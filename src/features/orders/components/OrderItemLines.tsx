@@ -6,17 +6,35 @@ interface OrderItemLinesProps {
   items: OrderItem[]
   /** Prices are left out on the kitchen board, where only what to cook matters. */
   showPrices?: boolean
+  /** Lines marked out of stock while the customer decides. */
+  unavailableIds?: string[]
   className?: string
 }
 
 /** Each dish, then each option on its own line, then the customer's note for that dish. */
-export const OrderItemLines = ({ items, showPrices = true, className }: OrderItemLinesProps) => (
+export const OrderItemLines = ({
+  items,
+  showPrices = true,
+  unavailableIds = [],
+  className,
+}: OrderItemLinesProps) => (
   <ul className={cn('flex flex-col', className)}>
     {items.map((item) => (
-      <li key={item.id} className="border-b border-line py-2 text-sm last:border-b-0">
+      <li
+        key={item.id}
+        className={cn(
+          'border-b border-line py-2 text-sm last:border-b-0',
+          unavailableIds.includes(item.id) && 'text-muted line-through',
+        )}
+      >
         <div className="flex justify-between gap-4">
           <span>
             <strong>{item.quantity} ×</strong> {item.name}
+            {unavailableIds.includes(item.id) && (
+              <span className="ml-2 inline-block rounded-full bg-danger-soft px-2 text-[11px] font-bold text-jollof-dark no-underline">
+                Out of stock
+              </span>
+            )}
           </span>
           {showPrices && (
             <span className="font-semibold">

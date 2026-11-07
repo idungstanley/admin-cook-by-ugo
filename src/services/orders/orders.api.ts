@@ -17,6 +17,15 @@ export const ordersApi = {
     http.post<Order>(`${orderPath(orderId)}/refund`, { amount, reason }),
   recordCollection: ({ orderId, collectedBy }: { orderId: string; collectedBy: CollectedBy }) =>
     http.post<Order>(`${orderPath(orderId)}/collection`, { collectedBy }),
+  requestChanges: ({
+    orderId,
+    ...input
+  }: {
+    orderId: string
+    itemIds: string[]
+    message?: string
+    markSoldOut: boolean
+  }) => http.post<Order>(`${orderPath(orderId)}/changes`, input),
   cancel: ({ orderId, reason }: { orderId: string; reason: string }) =>
     http.post<Order>(`${orderPath(orderId)}/cancel`, { reason }),
 }

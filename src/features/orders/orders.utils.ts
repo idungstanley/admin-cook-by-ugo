@@ -4,7 +4,12 @@ import { formatDateTime, penceToPounds } from '@/lib/format'
 import type { Order, OrderStatus, Pence } from '@/types'
 
 const HOUR_MS = 3_600_000
-const ACTIVE_STATUSES: OrderStatus[] = ['received', 'preparing', 'out-for-delivery']
+const ACTIVE_STATUSES: OrderStatus[] = [
+  'received',
+  'awaiting-customer',
+  'preparing',
+  'out-for-delivery',
+]
 
 export const isActiveOrder = ({ status }: Order) => ACTIVE_STATUSES.includes(status)
 
@@ -18,6 +23,10 @@ export const dueAt = (order: Pick<Order, 'createdAt' | 'etaMinutes' | 'scheduled
 /** When the food must leave the kitchen to arrive on time. */
 export const readyBy = (order: Order) =>
   dueAt(order) - (order.deliveryMinutes ?? DEFAULT_DELIVERY_MINUTES) * MINUTE_MS
+
+/** Items the customer has been asked about and not yet answered. */
+export const waitingIds = (order: Order) =>
+  order.amendment && order.amendment.state !== 'resolved' ? order.amendment.unavailableItemIds : []
 
 /** Late only once the promised arrival time has passed, so scheduled orders are not flagged early. */
 export const isOverdue = (order: Order, now = Date.now()) =>
