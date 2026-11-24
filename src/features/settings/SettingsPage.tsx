@@ -40,7 +40,8 @@ const settingsSchema = z.object({
         id: z.string(),
         maxMiles: z.number('Enter miles').positive('Enter miles').max(50, 'Up to 50 miles'),
         fee: money('a fee'),
-        minimumOrder: money('a minimum'),
+        // Optional: an empty box means no minimum order for that ring.
+        minimumOrder: z.number().min(0, 'Cannot be negative').or(z.nan()),
         active: z.boolean(),
       }),
     )
@@ -59,7 +60,7 @@ const toFormValues = (settings: ShopSettings): SettingsValues => ({
   deliveryRadii: settings.deliveryRadii.map((ring) => ({
     ...ring,
     fee: penceToPounds(ring.fee),
-    minimumOrder: penceToPounds(ring.minimumOrder),
+    minimumOrder: penceToPounds(ring.minimumOrder ?? 0),
   })),
   freeDeliveryThreshold: penceToPounds(settings.freeDeliveryThreshold),
   prepMinutes: settings.prepMinutes,
@@ -87,7 +88,7 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
       deliveryRadii: values.deliveryRadii.map((ring) => ({
         ...ring,
         fee: poundsToPence(ring.fee),
-        minimumOrder: poundsToPence(ring.minimumOrder),
+        minimumOrder: poundsToPence(Number.isNaN(ring.minimumOrder) ? 0 : ring.minimumOrder),
       })),
       freeDeliveryThreshold: poundsToPence(values.freeDeliveryThreshold),
     })
@@ -210,7 +211,7 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
                 id: createId('radius'),
                 maxMiles: Math.max(0, ...liveRings.map(({ maxMiles }) => maxMiles || 0)) + 2,
                 fee: 5.99,
-                minimumOrder: 15,
+                minimumOrder: 0,
                 active: true,
               })
             }
@@ -247,7 +248,8 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
                   {...register(`deliveryRadii.${index}.fee`, { valueAsNumber: true })}
                 />
                 <TextField
-                  label="Minimum (£)"
+                  label="Minimum (optional)"
+                  placeholder="None"
                   type="number"
                   step="0.01"
                   error={errors.deliveryRadii?.[index]?.minimumOrder?.message}

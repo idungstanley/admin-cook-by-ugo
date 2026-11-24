@@ -230,10 +230,12 @@ export interface OfferInput {
 
 export interface Review {
   id: string
-  orderId: string
-  orderNumber: string
-  orderTotal: Pence
-  customerId: string
+  /** Missing for reviews copied in from another platform. */
+  orderId?: string
+  orderNumber?: string
+  orderTotal?: Pence
+  customerId?: string
+  source?: string
   displayName: string
   rating: number
   comment?: string

@@ -1,10 +1,11 @@
-import { Star, ThumbsUp } from 'lucide-react'
+import { Plus, Star, ThumbsUp } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, CardSection } from '@/components/ui/Card'
 import { Chip } from '@/components/ui/Chip'
-import { TextAreaField } from '@/components/ui/fields'
+import { SelectField, TextAreaField, TextField } from '@/components/ui/fields'
+import { Modal } from '@/components/ui/Overlay'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { PageSkeleton } from '@/components/ui/Skeleton'
 import { StatTile } from '@/components/ui/StatTile'
@@ -12,6 +13,8 @@ import { ErrorMessage } from '@/components/ui/StatusMessage'
 import { cn } from '@/lib/cn'
 import { formatDate, formatPrice, pluralise } from '@/lib/format'
 import {
+  useDeleteReview,
+  useImportReview,
   useReplyToReview,
   useReviews,
   useSetReviewHidden,
@@ -43,6 +46,7 @@ const initials = (name: string) =>
 const ReviewRow = ({ review }: { review: Review }) => {
   const reply = useReplyToReview()
   const setHidden = useSetReviewHidden()
+  const deleteReview = useDeleteReview()
   const [replying, setReplying] = useState(false)
   const [text, setText] = useState(review.reply ?? '')
 
@@ -61,13 +65,18 @@ const ReviewRow = ({ review }: { review: Review }) => {
           <p className="font-semibold">
             {review.displayName}{' '}
             <span className="text-xs font-normal text-muted">
-              {review.customerOrders === 1
-                ? 'New customer'
-                : pluralise(review.customerOrders, 'order')}
+              {review.source
+                ? `via ${review.source}`
+                : review.customerOrders === 1
+                  ? 'New customer'
+                  : pluralise(review.customerOrders, 'order')}
             </span>
           </p>
           <p className="text-xs text-muted">
-            {formatDate(review.createdAt)} · {review.orderNumber} · {formatPrice(review.orderTotal)}
+            {formatDate(review.createdAt)}
+            {review.orderNumber && review.orderTotal !== undefined
+              ? ` · ${review.orderNumber} · ${formatPrice(review.orderTotal)}`
+              : ''}
           </p>
         </div>
         <Stars rating={review.rating} className="mt-1" />
@@ -124,6 +133,16 @@ const ReviewRow = ({ review }: { review: Review }) => {
             >
               {review.hidden ? 'Show on website' : 'Hide from website'}
             </Button>
+            {review.source && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={deleteReview.isPending}
+                onClick={() => deleteReview.mutate(review.id)}
+              >
+                Delete
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -131,8 +150,93 @@ const ReviewRow = ({ review }: { review: Review }) => {
   )
 }
 
+const ImportReviewForm = ({ onClose }: { onClose: () => void }) => {
+  const importReview = useImportReview()
+  const [displayName, setDisplayName] = useState('')
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
+  const [source, setSource] = useState('Uber Eats')
+  const [reviewedOn, setReviewedOn] = useState('')
+
+  return (
+    <form
+      className="flex flex-col gap-4 p-6"
+      onSubmit={(event) => {
+        event.preventDefault()
+        importReview.mutate(
+          {
+            displayName: displayName.trim(),
+            rating,
+            comment: comment.trim() || undefined,
+            source,
+            reviewedAt: reviewedOn ? new Date(`${reviewedOn}T12:00:00`).getTime() : undefined,
+          },
+          { onSuccess: onClose },
+        )
+      }}
+    >
+      <div>
+        <h2 className="text-xl">Add a review from another platform</h2>
+        <p className="text-sm text-muted">
+          Copy it exactly as the customer wrote it, with the name as the platform shows it, such as
+          &ldquo;Olusegun H&rdquo;. The website labels it with where it came from.
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <TextField
+          label="Customer name"
+          required
+          value={displayName}
+          onChange={(event) => setDisplayName(event.target.value)}
+        />
+        <SelectField
+          label="From"
+          value={source}
+          onChange={(event) => setSource(event.target.value)}
+        >
+          {['Uber Eats', 'Just Eat', 'Deliveroo', 'Google'].map((name) => (
+            <option key={name}>{name}</option>
+          ))}
+        </SelectField>
+        <SelectField
+          label="Stars"
+          value={rating}
+          onChange={(event) => setRating(Number(event.target.value))}
+        >
+          {[5, 4, 3, 2, 1].map((stars) => (
+            <option key={stars} value={stars}>
+              {pluralise(stars, 'star')}
+            </option>
+          ))}
+        </SelectField>
+        <TextField
+          label="Date (optional)"
+          type="date"
+          value={reviewedOn}
+          onChange={(event) => setReviewedOn(event.target.value)}
+        />
+      </div>
+      <TextAreaField
+        label="What they wrote"
+        rows={3}
+        value={comment}
+        onChange={(event) => setComment(event.target.value)}
+      />
+      <div className="flex justify-end gap-2">
+        <Button variant="ghost" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={!displayName.trim() || importReview.isPending}>
+          Add review
+        </Button>
+      </div>
+    </form>
+  )
+}
+
 export const ReviewsPage = () => {
   const { data, isPending, isError, refetch } = useReviews()
+  const [importing, setImporting] = useState(false)
   const [stars, setStars] = useState<number | null>(null)
   const [replyFilter, setReplyFilter] = useState<ReplyFilter>('all')
 
@@ -158,8 +262,16 @@ export const ReviewsPage = () => {
     <>
       <PageHeader
         title="Reviews"
-        description="Customers rate their order from the tracking link after delivery."
+        description="Customers rate their order from the tracking link after delivery. You can also copy in reviews from Uber Eats so the website shows them."
+        actions={
+          <Button onClick={() => setImporting(true)}>
+            <Plus className="size-4" /> Add a review
+          </Button>
+        }
       />
+      <Modal open={importing} onClose={() => setImporting(false)} label="Add a review">
+        {importing && <ImportReviewForm onClose={() => setImporting(false)} />}
+      </Modal>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-[1fr_2fr]">
         <Card className="flex items-center gap-6">

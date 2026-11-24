@@ -29,12 +29,7 @@ export const OrderCard = ({ order }: { order: Order }) => {
       </div>
       <p className="text-[13px] text-muted">{order.customerName}</p>
 
-      <OrderItemLines
-        items={order.items}
-        showPrices={false}
-        unavailableIds={waitingIds(order)}
-        className="my-1.5"
-      />
+      <OrderItemLines items={order.items} unavailableIds={waitingIds(order)} className="my-1.5" />
 
       {order.allergyNote && <AllergyAlert note={order.allergyNote} />}
 

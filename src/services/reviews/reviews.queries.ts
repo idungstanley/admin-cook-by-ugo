@@ -9,6 +9,10 @@ export const useReviews = () =>
   useQuery({ queryKey: queryKeys.reviews, queryFn: reviewsApi.listReviews })
 export const useReplyToReview = () =>
   useAppMutation({ mutationFn: reviewsApi.reply, invalidate, success: 'Reply posted' })
+export const useImportReview = () =>
+  useAppMutation({ mutationFn: reviewsApi.importReview, invalidate, success: 'Review added' })
+export const useDeleteReview = () =>
+  useAppMutation({ mutationFn: reviewsApi.deleteReview, invalidate, success: 'Review deleted' })
 export const useSetReviewHidden = () =>
   useAppMutation({
     mutationFn: reviewsApi.setHidden,

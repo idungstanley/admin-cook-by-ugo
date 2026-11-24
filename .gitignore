@@ -433,3 +433,6 @@ dist/
 .env
 .env.*
 !.env.example
+
+# Cloudflare
+.wrangler

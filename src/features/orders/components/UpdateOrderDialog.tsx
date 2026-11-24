@@ -14,20 +14,54 @@ interface UpdateOrderDialogProps {
   onClose: () => void
 }
 
+/** A whole dish is flagged by its line id; a single side or option on it by `line-1#0`. */
+const optionKey = (lineId: string, index: number) => `${lineId}#${index}`
+
+interface StockRowProps {
+  label: string
+  detail: string
+  inStock: boolean
+  disabled?: boolean
+  nested?: boolean
+  onChange: (inStock: boolean) => void
+}
+
+const StockRow = ({ label, detail, inStock, disabled, nested, onChange }: StockRowProps) => (
+  <li className={cn('flex items-center gap-3 py-2.5', nested ? 'pl-9 pr-4' : 'px-4')}>
+    <div className={cn('min-w-0 flex-1', !inStock && 'text-muted line-through')}>
+      <p className={nested ? 'text-sm' : 'font-semibold'}>{label}</p>
+      <p className="text-xs">{detail}</p>
+    </div>
+    <span
+      className={cn(
+        'w-20 text-right text-xs font-bold',
+        inStock ? 'text-ewedu' : 'text-jollof-dark',
+      )}
+    >
+      {inStock ? 'In stock' : 'Out of stock'}
+    </span>
+    <Toggle label={`${label} in stock`} checked={inStock} disabled={disabled} onChange={onChange} />
+  </li>
+)
+
 const UpdateForm = ({ order, onClose }: Omit<UpdateOrderDialogProps, 'open'>) => {
   const requestChanges = useRequestChanges()
   const [outOfStock, setOutOfStock] = useState<string[]>([])
   const [message, setMessage] = useState('')
   const [markSoldOut, setMarkSoldOut] = useState(true)
 
-  const toggle = (itemId: string, inStock: boolean) =>
-    setOutOfStock((current) =>
-      inStock ? current.filter((id) => id !== itemId) : [...current, itemId],
-    )
+  const toggle = (key: string, inStock: boolean) =>
+    setOutOfStock((current) => (inStock ? current.filter((id) => id !== key) : [...current, key]))
+
+  /** A dish that is off takes its options with it, so they are not flagged twice. */
+  const flagged = outOfStock.filter((key) => {
+    const [lineId] = key.split('#')
+    return key === lineId || !outOfStock.includes(lineId ?? '')
+  })
 
   const send = () =>
     requestChanges.mutate(
-      { orderId: order.id, itemIds: outOfStock, message: message.trim() || undefined, markSoldOut },
+      { orderId: order.id, itemIds: flagged, message: message.trim() || undefined, markSoldOut },
       { onSuccess: onClose },
     )
 
@@ -36,38 +70,43 @@ const UpdateForm = ({ order, onClose }: Omit<UpdateOrderDialogProps, 'open'>) =>
       <div>
         <h2 className="text-xl">Update {order.number}</h2>
         <p className="text-sm text-muted">
-          Switch off anything you have run out of. The customer gets an email and can remove it,
-          swap it for something else, or cancel. Delivery is not charged again.
+          Switch off anything you have run out of: a whole dish, or just one side on it. The
+          customer gets an email and can remove it, swap it or cancel. Delivery is not charged
+          again.
         </p>
       </div>
 
-      <ul className="flex flex-col divide-y divide-line rounded-2xl border border-line">
+      <ul className="flex max-h-[50vh] flex-col divide-y divide-line overflow-y-auto rounded-2xl border border-line">
         {order.items.map((item) => {
-          const inStock = !outOfStock.includes(item.id)
+          const dishInStock = !outOfStock.includes(item.id)
           return (
-            <li key={item.id} className="flex items-center gap-3 px-4 py-3">
-              <div className={cn('min-w-0 flex-1', !inStock && 'text-muted line-through')}>
-                <p className="font-semibold">
-                  {item.quantity} × {item.name}
-                </p>
-                {item.options?.length ? (
-                  <p className="text-xs">{item.options.map(({ label }) => label).join(' · ')}</p>
-                ) : null}
-                <p className="text-xs">{formatPrice(item.unitPrice * item.quantity)}</p>
-              </div>
-              <span
-                className={cn(
-                  'w-20 text-right text-xs font-bold',
-                  inStock ? 'text-ewedu' : 'text-jollof-dark',
-                )}
-              >
-                {inStock ? 'In stock' : 'Out of stock'}
-              </span>
-              <Toggle
-                label={`${item.name} in stock`}
-                checked={inStock}
-                onChange={(checked) => toggle(item.id, checked)}
-              />
+            <li key={item.id}>
+              <ul>
+                <StockRow
+                  label={`${item.quantity} × ${item.name}`}
+                  detail={formatPrice((item.basePrice ?? item.unitPrice) * item.quantity)}
+                  inStock={dishInStock}
+                  onChange={(inStock) => toggle(item.id, inStock)}
+                />
+                {(item.options ?? []).map((option, index) => {
+                  const key = optionKey(item.id, index)
+                  return (
+                    <StockRow
+                      key={key}
+                      nested
+                      label={`+ ${option.label}`}
+                      detail={
+                        option.price
+                          ? formatPrice(option.price * item.quantity)
+                          : `${option.groupTitle} · included`
+                      }
+                      inStock={dishInStock && !outOfStock.includes(key)}
+                      disabled={!dishInStock}
+                      onChange={(inStock) => toggle(key, inStock)}
+                    />
+                  )
+                })}
+              </ul>
             </li>
           )
         })}
@@ -75,13 +114,13 @@ const UpdateForm = ({ order, onClose }: Omit<UpdateOrderDialogProps, 'open'>) =>
 
       <TextAreaField
         label="Message to the customer (optional)"
-        placeholder="Sorry, the egusi has just run out today."
+        placeholder="Sorry, the plantain has just run out today."
         rows={2}
         value={message}
         onChange={(event) => setMessage(event.target.value)}
       />
       <CheckboxField
-        label="Also mark these dishes sold out on the menu"
+        label="Also mark whole dishes that ran out as sold out on the menu"
         checked={markSoldOut}
         onChange={(event) => setMarkSoldOut(event.target.checked)}
       />
@@ -90,7 +129,7 @@ const UpdateForm = ({ order, onClose }: Omit<UpdateOrderDialogProps, 'open'>) =>
         <Button variant="ghost" onClick={onClose}>
           Not now
         </Button>
-        <Button disabled={outOfStock.length === 0 || requestChanges.isPending} onClick={send}>
+        <Button disabled={flagged.length === 0 || requestChanges.isPending} onClick={send}>
           Send to customer
         </Button>
       </div>

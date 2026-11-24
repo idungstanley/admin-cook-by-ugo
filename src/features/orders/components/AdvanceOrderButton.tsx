@@ -9,6 +9,7 @@ import {
   useUpdateOrderStatus,
 } from '@/services/orders/orders.queries'
 import { useRiders } from '@/services/staff/staff.queries'
+import { useAuthStore } from '@/stores/auth.store'
 import type { Order } from '@/types'
 
 interface AdvanceOrderButtonProps {
@@ -28,6 +29,7 @@ export const AdvanceOrderButton = ({ order, size = 'md', fullWidth }: AdvanceOrd
   const recordCollection = useRecordCollection()
   const assignRider = useAssignRider()
   const { data: riders } = useRiders()
+  const user = useAuthStore((state) => state.user)
   const next = NEXT_STATUS[order.status]
 
   if (!next) return null
@@ -62,6 +64,11 @@ export const AdvanceOrderButton = ({ order, size = 'md', fullWidth }: AdvanceOrd
       <Modal open={dialog === 'rider'} onClose={closeDialog} label="Choose a rider">
         <div className="p-6">
           <h2 className="text-xl">Who is taking {order.number}?</h2>
+          {riders?.length === 0 && (
+            <p className="mt-1 text-sm text-muted">
+              No riders are set up yet. Add them in Staff and roles, or take it yourself.
+            </p>
+          )}
           <div className="mt-4 flex flex-col gap-2">
             {riders?.map(({ id, name }) => (
               <Button
@@ -74,6 +81,16 @@ export const AdvanceOrderButton = ({ order, size = 'md', fullWidth }: AdvanceOrd
                 {name}
               </Button>
             ))}
+            {user && !riders?.some(({ id }) => id === user.id) && (
+              <Button
+                variant="outline"
+                size="lg"
+                disabled={assignRider.isPending}
+                onClick={() => sendWithRider(user.id)}
+              >
+                I&apos;ll deliver it myself
+              </Button>
+            )}
           </div>
         </div>
       </Modal>

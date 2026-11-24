@@ -43,10 +43,13 @@ export const OrderItemLines = ({
           )}
         </div>
         {item.options?.length
-          ? item.options.map((option) => (
+          ? item.options.map((option, index) => (
               <div
                 key={`${option.groupTitle}-${option.label}`}
-                className="flex justify-between gap-4 pl-6 text-muted"
+                className={cn(
+                  'flex justify-between gap-4 pl-6 text-muted',
+                  unavailableIds.includes(`${item.id}#${index}`) && 'line-through',
+                )}
               >
                 <span>+ {option.label}</span>
                 {showPrices && (
