@@ -223,9 +223,10 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
         <div className="grid items-start gap-4 lg:grid-cols-[1.3fr_1fr]">
           <DeliveryMap centre={settings.kitchen} radii={liveRings} />
           <div className="flex flex-col gap-3">
-            {errors.deliveryRadii?.root?.message && (
+            {/* An empty list reports its error on the array itself, not on `root`. */}
+            {(errors.deliveryRadii?.message ?? errors.deliveryRadii?.root?.message) && (
               <p role="alert" className="text-xs font-semibold text-jollof-dark">
-                {errors.deliveryRadii.root.message}
+                {errors.deliveryRadii?.message ?? errors.deliveryRadii?.root?.message}
               </p>
             )}
             {rings.fields.map((field, index) => (

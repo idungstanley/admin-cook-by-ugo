@@ -43,6 +43,13 @@ const groupSchema = z.object({
 
 type GroupValues = z.infer<typeof groupSchema>
 
+const emptyChoice = (): GroupValues['choices'][number] => ({
+  id: createId('choice'),
+  label: '',
+  price: 0,
+  image: '',
+})
+
 interface GroupFormProps {
   group: OptionGroup | null
   dishes: Dish[]
@@ -63,13 +70,13 @@ const GroupForm = ({ group, dishes, onClose }: GroupFormProps) => {
       title: group?.title ?? '',
       required: group?.required ?? false,
       maxChoices: group?.maxChoices ?? 1,
-      choices:
-        group?.choices.map(({ id, label, priceDelta, image }) => ({
-          id,
-          label,
-          price: penceToPounds(priceDelta),
-          image: image ?? '',
-        })) ?? [],
+      // A new group starts with one empty choice, since a group needs at least one.
+      choices: group?.choices.map(({ id, label, priceDelta, image }) => ({
+        id,
+        label,
+        price: penceToPounds(priceDelta),
+        image: image ?? '',
+      })) ?? [emptyChoice()],
       dishIds: dishes
         .filter(({ optionGroupIds }) => group && optionGroupIds.includes(group.id))
         .map(({ id }) => id),
@@ -173,16 +180,17 @@ const GroupForm = ({ group, dishes, onClose }: GroupFormProps) => {
               </IconButton>
             </div>
           ))}
-          {errors.choices?.root?.message && (
+          {/* An empty list reports its error on the array itself, not on `root`. */}
+          {(errors.choices?.message ?? errors.choices?.root?.message) && (
             <p role="alert" className="text-xs font-semibold text-jollof-dark">
-              {errors.choices.root.message}
+              {errors.choices?.message ?? errors.choices?.root?.message}
             </p>
           )}
           <Button
             variant="outline"
             size="sm"
             className="self-start"
-            onClick={() => append({ id: createId('choice'), label: '', price: 0, image: '' })}
+            onClick={() => append(emptyChoice())}
           >
             <Plus className="size-4" /> Add choice
           </Button>
