@@ -46,7 +46,8 @@ const settingsSchema = z.object({
       }),
     )
     .min(1, 'Add at least one delivery radius'),
-  freeDeliveryThreshold: money('an amount'),
+  // Optional: an empty box means no free delivery. Offers can still give it.
+  freeDeliveryThreshold: z.number().min(0, 'Cannot be negative').or(z.nan()),
   prepMinutes: z.number('Enter minutes').int().min(5, 'At least 5 minutes'),
   deliveryMinutes: z.number('Enter minutes').int().min(5, 'At least 5 minutes'),
 })
@@ -62,7 +63,10 @@ const toFormValues = (settings: ShopSettings): SettingsValues => ({
     fee: penceToPounds(ring.fee),
     minimumOrder: penceToPounds(ring.minimumOrder ?? 0),
   })),
-  freeDeliveryThreshold: penceToPounds(settings.freeDeliveryThreshold),
+  freeDeliveryThreshold:
+    settings.freeDeliveryThreshold == null
+      ? Number.NaN
+      : penceToPounds(settings.freeDeliveryThreshold),
   prepMinutes: settings.prepMinutes,
   deliveryMinutes: settings.deliveryMinutes,
 })
@@ -90,7 +94,9 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
         fee: poundsToPence(ring.fee),
         minimumOrder: poundsToPence(Number.isNaN(ring.minimumOrder) ? 0 : ring.minimumOrder),
       })),
-      freeDeliveryThreshold: poundsToPence(values.freeDeliveryThreshold),
+      freeDeliveryThreshold: Number.isNaN(values.freeDeliveryThreshold)
+        ? null
+        : poundsToPence(values.freeDeliveryThreshold),
     })
 
   return (
@@ -174,7 +180,9 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
               {...register('kitchenPostcode')}
             />
             <TextField
-              label="Free delivery over (£)"
+              label="Free delivery over (£, optional)"
+              placeholder="No free delivery"
+              hint="Leave empty for no free delivery. Use an offer for free delivery deals."
               type="number"
               step="0.01"
               error={errors.freeDeliveryThreshold?.message}

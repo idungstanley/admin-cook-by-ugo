@@ -1,4 +1,5 @@
-import { useId, type ComponentProps, type ReactNode } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
+import { useId, useState, type ComponentProps, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
 const CONTROL_CLASS =
@@ -132,3 +133,44 @@ export const CheckboxField = ({
     {label}
   </label>
 )
+
+/** A password box with a button to show what was typed, so typos are easy to spot. */
+export const PasswordField = ({
+  label,
+  error,
+  hint,
+  containerClassName,
+  className,
+  ...props
+}: FieldProps & Omit<ComponentProps<'input'>, 'type'>) => {
+  const id = useId()
+  const [visible, setVisible] = useState(false)
+  return (
+    <FieldShell
+      label={label}
+      error={error}
+      hint={hint}
+      containerClassName={containerClassName}
+      id={id}
+    >
+      <div className="relative">
+        <input
+          id={id}
+          type={visible ? 'text' : 'password'}
+          className={cn(CONTROL_CLASS, 'h-11 pr-12', className)}
+          {...describedBy(id, error)}
+          {...props}
+        />
+        <button
+          type="button"
+          aria-label={visible ? 'Hide password' : 'Show password'}
+          aria-pressed={visible}
+          onClick={() => setVisible((shown) => !shown)}
+          className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-xl text-muted transition hover:text-cocoa"
+        >
+          {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      </div>
+    </FieldShell>
+  )
+}

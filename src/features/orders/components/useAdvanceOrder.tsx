@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Overlay'
@@ -69,9 +70,17 @@ export const useAdvanceOrder = (order: Order, onFinish?: () => void): AdvanceOrd
       <Modal open={dialog === 'rider'} onClose={closeDialog} label="Choose a rider">
         <div className="p-6">
           <h2 className="text-xl">Who is taking {order.number}?</h2>
+          <p className="mt-1 text-sm text-muted">
+            Choose who is taking it out. They will see it under My deliveries, and the customer gets
+            an &ldquo;on its way&rdquo; email.
+          </p>
           {riders?.length === 0 && (
-            <p className="mt-1 text-sm text-muted">
-              No riders are set up yet. Add them in Staff and roles, or take it yourself.
+            <p className="mt-2 rounded-xl bg-shea px-3 py-2 text-sm">
+              No riders yet. Tap <strong>I&apos;ll deliver it myself</strong> to send it now, or{' '}
+              <Link to="/staff" className="font-semibold text-jollof underline">
+                add a rider
+              </Link>{' '}
+              in Staff and roles.
             </p>
           )}
           <div className="mt-4 flex flex-col gap-2">

@@ -22,7 +22,7 @@ describe('buildReport', () => {
       [
         order({ refundedAmount: 500 }),
         order({ paymentMethod: 'on-delivery' }),
-        order({ status: 'cancelled' }),
+        order({ status: 'cancelled', refundedAmount: 2000 }),
         order({ createdAt: NOW - 8 * DAY }),
       ],
       7,
@@ -32,7 +32,9 @@ describe('buildReport', () => {
     expect(report.sales).toBe(3500)
     expect(report.orderCount).toBe(2)
     expect(report.averageOrder).toBe(1750)
-    expect(report.refunded).toBe(500)
+    // A cancelled order's refund still shows, though its sale does not.
+    expect(report.refunded).toBe(2500)
+    expect(report.cancelled).toBe(1)
     expect(report.payment).toEqual({ card: 1500, onDelivery: 2000 })
     expect(report.topDishes[0]).toEqual({ name: 'Chapman', quantity: 4, revenue: 1396 })
   })

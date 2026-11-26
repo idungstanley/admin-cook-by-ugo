@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Button } from '@/components/ui/Button'
-import { TextField } from '@/components/ui/fields'
+import { PasswordField, TextField } from '@/components/ui/fields'
 import { Logo } from '@/components/ui/Logo'
 import { HOME_ROUTE } from '@/constants/roles'
 import { sessionToken } from '@/lib/sessionToken'
@@ -68,9 +68,8 @@ const CredentialsForm = ({ onTwoFactor, onForgot }: CredentialsFormProps) => {
         error={errors.email?.message}
         {...register('email')}
       />
-      <TextField
+      <PasswordField
         label="Password"
-        type="password"
         autoComplete="current-password"
         error={errors.password?.message}
         {...register('password')}

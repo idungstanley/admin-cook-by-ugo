@@ -122,7 +122,11 @@ export const ReportsPage = () => {
           detail={formatChange(report.orderChange, range)}
         />
         <StatTile label="Average order" value={formatPrice(report.averageOrder)} />
-        <StatTile label="Refunded" value={formatPrice(report.refunded)} />
+        <StatTile
+          label="Refunded"
+          value={formatPrice(report.refunded)}
+          detail={`${pluralise(report.cancelled, 'cancelled order')} in this period`}
+        />
       </div>
 
       <div className="grid items-start gap-4 xl:grid-cols-[1.7fr_1fr]">

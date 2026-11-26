@@ -49,6 +49,7 @@ export const buildReportBetween = (orders: Order[], from: number, to: number) =>
   const end = Math.min(addDays(startOfDay(to), 1) - 1, Math.max(to, start))
   const days = daysBetween(start, end)
   const previousStart = addDays(start, -days)
+  const inPeriod = orders.filter(({ createdAt }) => createdAt >= start && createdAt <= end)
   const counted = orders.filter(({ status }) => status !== 'cancelled')
   const current = counted.filter(({ createdAt }) => createdAt >= start && createdAt <= end)
   const previous = counted.filter(
@@ -83,7 +84,9 @@ export const buildReportBetween = (orders: Order[], from: number, to: number) =>
     sales,
     orderCount: current.length,
     averageOrder: current.length > 0 ? Math.round(sales / current.length) : 0,
-    refunded: current.reduce((sum, { refundedAmount }) => sum + refundedAmount, 0),
+    // Refunds include cancelled orders, which are otherwise left out of the sales figures.
+    refunded: inPeriod.reduce((sum, { refundedAmount }) => sum + refundedAmount, 0),
+    cancelled: inPeriod.filter(({ status }) => status === 'cancelled').length,
     salesChange: percentChange(sales, netSales(previous)),
     orderChange: percentChange(current.length, previous.length),
     daily,

@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { buttonStyles } from '@/components/ui/button.styles'
-import { TextField } from '@/components/ui/fields'
+import { PasswordField } from '@/components/ui/fields'
 import { Logo } from '@/components/ui/Logo'
 import { authApi } from '@/services/auth/auth.api'
 
@@ -33,9 +33,8 @@ export const ResetPasswordPage = ({ token }: { token: string }) => {
           className="flex flex-col gap-4"
         >
           <h1 className="text-3xl">Set your password</h1>
-          <TextField
+          <PasswordField
             label="New password"
-            type="password"
             autoComplete="new-password"
             hint={`At least ${MIN_PASSWORD} characters`}
             value={password}

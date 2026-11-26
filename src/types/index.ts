@@ -198,7 +198,8 @@ export interface ShopSettings {
   closures: Closure[]
   kitchen: { postcode: string; lat: number; lng: number }
   deliveryRadii: DeliveryRadius[]
-  freeDeliveryThreshold: Pence
+  /** Null when there is no free delivery over an amount. */
+  freeDeliveryThreshold: Pence | null
   prepMinutes: number
   deliveryMinutes: number
 }
