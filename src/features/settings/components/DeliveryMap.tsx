@@ -39,7 +39,10 @@ export const DeliveryMap = ({ centre, radii }: DeliveryMapProps) => {
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        // OpenStreetMap blocks tiles sent with no referrer, which the site's headers set by
+        // default. The tiles alone send the site's address, never the page path.
+        referrerPolicy="strict-origin"
       />
       {rings.map((ring, index) => {
         const colour = RING_COLOURS[(rings.length - 1 - index) % RING_COLOURS.length]
