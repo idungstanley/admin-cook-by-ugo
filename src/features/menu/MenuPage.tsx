@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Pencil, Plus } from 'lucide-react'
+import { ArrowDown, ArrowUp, FolderPlus, Pencil, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -13,6 +13,7 @@ import { usePermission } from '@/hooks/usePermission'
 import { formatPrice } from '@/lib/format'
 import { useCategories, useDishes, useMoveDish, useSetSoldOut } from '@/services/menu/menu.queries'
 import type { Dish } from '@/types'
+import { CategoriesDrawer } from './components/CategoriesDrawer'
 import { DishFormDrawer } from './components/DishFormDrawer'
 import { groupDishes } from './menu.utils'
 
@@ -24,6 +25,7 @@ export const MenuPage = () => {
   const moveDish = useMoveDish()
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<Dish | 'new' | null>(null)
+  const [managingCategories, setManagingCategories] = useState(false)
 
   const { data: dishes } = dishesQuery
   const groups = useMemo(
@@ -118,9 +120,17 @@ export const MenuPage = () => {
         }
         actions={
           canEdit && (
-            <Button onClick={() => setEditing('new')}>
-              <Plus className="size-4" /> Add dish
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => setManagingCategories(true)}>
+                <FolderPlus className="size-4" /> Categories
+              </Button>
+              <Button
+                disabled={(categories?.length ?? 0) === 0}
+                onClick={() => setEditing('new')}
+              >
+                <Plus className="size-4" /> Add dish
+              </Button>
+            </div>
           )
         }
       />
@@ -131,8 +141,20 @@ export const MenuPage = () => {
         className="mb-5 max-w-md"
       />
 
-      {groups.length === 0 ? (
-        <StatusMessage title="No dishes match that" />
+      {categories?.length === 0 ? (
+        <StatusMessage
+          title="Start with a category"
+          body="Dishes sit inside categories, like Rice or Drinks. Add a category first."
+          action={
+            canEdit && (
+              <Button onClick={() => setManagingCategories(true)}>
+                <FolderPlus className="size-4" /> Add a category
+              </Button>
+            )
+          }
+        />
+      ) : groups.length === 0 ? (
+        <StatusMessage title={search ? 'No dishes match that' : 'No dishes yet'} />
       ) : (
         <div className="flex flex-col gap-6">
           {groups.map(({ category, dishes: rows, firstId, lastId }) => (
@@ -149,6 +171,7 @@ export const MenuPage = () => {
         </div>
       )}
 
+      <CategoriesDrawer open={managingCategories} onClose={() => setManagingCategories(false)} />
       <DishFormDrawer
         open={editing !== null}
         dish={editing === 'new' ? null : editing}

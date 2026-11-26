@@ -10,6 +10,7 @@ export const useOptionGroups = () =>
   useQuery({ queryKey: queryKeys.optionGroups, queryFn: menuApi.listOptionGroups })
 
 const dishes = [queryKeys.dishes]
+const categories = [queryKeys.categories]
 const options = [queryKeys.optionGroups, queryKeys.dishes]
 
 export const useCreateDish = () =>
@@ -34,3 +35,17 @@ export const useDeleteOptionGroup = () =>
     invalidate: options,
     success: 'Option group deleted',
   })
+export const useSaveCategory = () =>
+  useAppMutation({
+    mutationFn: menuApi.saveCategory,
+    invalidate: categories,
+    success: 'Category saved',
+  })
+export const useDeleteCategory = () =>
+  useAppMutation({
+    mutationFn: menuApi.deleteCategory,
+    invalidate: categories,
+    success: 'Category deleted',
+  })
+export const useMoveCategory = () =>
+  useAppMutation({ mutationFn: menuApi.moveCategory, invalidate: categories })

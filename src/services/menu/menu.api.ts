@@ -3,10 +3,18 @@ import type { Category, Dish, OptionGroup } from '@/types'
 
 /** `kcal: null` clears a calorie count that was set before. */
 export type DishInput = Omit<Dish, 'id' | 'soldOut' | 'kcal'> & { kcal: number | null }
+export type CategoryInput = Omit<Category, 'id'>
 export type OptionGroupInput = Omit<OptionGroup, 'id'> & { dishIds: string[] }
 
 export const menuApi = {
   listCategories: () => http.get<Category[]>('/catalog/categories'),
+  saveCategory: ({ id, input }: { id?: string; input: CategoryInput }) =>
+    id
+      ? http.put<Category>(`/catalog/categories/${id}`, input)
+      : http.post<Category>('/catalog/categories', input),
+  deleteCategory: (id: string) => http.delete<void>(`/catalog/categories/${id}`),
+  moveCategory: ({ id, direction }: { id: string; direction: -1 | 1 }) =>
+    http.post<void>(`/catalog/categories/${id}/move`, { direction }),
   listDishes: () => http.get<Dish[]>('/catalog/dishes'),
   listOptionGroups: () => http.get<OptionGroup[]>('/catalog/option-groups'),
   createDish: (input: DishInput) => http.post<Dish>('/catalog/dishes', input),

@@ -112,9 +112,13 @@ export interface Order {
 
 export type DishBadge = 'Popular' | 'Spicy'
 
+export type CategoryAccent = 'jollof' | 'ewedu' | 'indigo' | 'gold'
+
 export interface Category {
   id: string
   name: string
+  shortName: string
+  accent: CategoryAccent
 }
 
 export interface Dish {
