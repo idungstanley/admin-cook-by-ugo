@@ -119,6 +119,8 @@ export interface Category {
   name: string
   shortName: string
   accent: CategoryAccent
+  /** Only staff see these. */
+  notes: string
 }
 
 export interface Dish {

@@ -3,6 +3,7 @@ import {
   Bike,
   ClipboardList,
   FileText,
+  FolderOpen,
   History,
   type LucideIcon,
   ListChecks,
@@ -35,6 +36,7 @@ export const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
   {
     title: 'Menu',
     items: [
+      { label: 'Categories', to: '/categories', icon: FolderOpen, permission: 'menu.edit' },
       { label: 'Dishes', to: '/menu', icon: UtensilsCrossed, permission: 'menu' },
       { label: 'Options', to: '/options', icon: ListChecks, permission: 'options' },
       { label: 'Deals', to: '/deals', icon: Tag, permission: 'deals' },

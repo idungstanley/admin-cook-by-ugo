@@ -3,7 +3,7 @@ import type { Category, Dish, OptionGroup } from '@/types'
 
 /** `kcal: null` clears a calorie count that was set before. */
 export type DishInput = Omit<Dish, 'id' | 'soldOut' | 'kcal'> & { kcal: number | null }
-export type CategoryInput = Omit<Category, 'id'>
+export type CategoryInput = Pick<Category, 'name' | 'notes'>
 export type OptionGroupInput = Omit<OptionGroup, 'id'> & { dishIds: string[] }
 
 export const menuApi = {

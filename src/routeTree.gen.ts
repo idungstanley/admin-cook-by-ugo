@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppCategoriesRouteImport } from './routes/_app/categories'
 import { Route as AppContentRouteImport } from './routes/_app/content'
 import { Route as AppCustomersRouteImport } from './routes/_app/customers'
 import { Route as AppDealsRouteImport } from './routes/_app/deals'
@@ -45,6 +46,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCategoriesRoute = AppCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
   getParentRoute: () => AppRoute,
 } as any)
 const AppContentRoute = AppContentRouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/categories': typeof AppCategoriesRoute
   '/content': typeof AppContentRoute
   '/customers': typeof AppCustomersRoute
   '/deals': typeof AppDealsRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/categories': typeof AppCategoriesRoute
   '/content': typeof AppContentRoute
   '/customers': typeof AppCustomersRoute
   '/deals': typeof AppDealsRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_app/categories': typeof AppCategoriesRoute
   '/_app/content': typeof AppContentRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/deals': typeof AppDealsRoute
@@ -183,6 +192,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/reset-password'
+    | '/categories'
     | '/content'
     | '/customers'
     | '/deals'
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/reset-password'
+    | '/categories'
     | '/content'
     | '/customers'
     | '/deals'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/reset-password'
+    | '/_app/categories'
     | '/_app/content'
     | '/_app/customers'
     | '/_app/deals'
@@ -272,6 +284,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/categories': {
+      id: '/_app/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof AppCategoriesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/content': {
@@ -376,6 +395,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppCategoriesRoute: typeof AppCategoriesRoute
   AppContentRoute: typeof AppContentRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDealsRoute: typeof AppDealsRoute
@@ -394,6 +414,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppCategoriesRoute: AppCategoriesRoute,
   AppContentRoute: AppContentRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDealsRoute: AppDealsRoute,

@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, FolderPlus, Pencil, Plus } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown, FolderPlus, Pencil, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -12,8 +12,9 @@ import { Toggle } from '@/components/ui/Toggle'
 import { usePermission } from '@/hooks/usePermission'
 import { formatPrice } from '@/lib/format'
 import { useCategories, useDishes, useMoveDish, useSetSoldOut } from '@/services/menu/menu.queries'
-import type { Dish } from '@/types'
-import { CategoriesDrawer } from './components/CategoriesDrawer'
+import { cn } from '@/lib/cn'
+import type { Category, Dish } from '@/types'
+import { CategoryFormDrawer } from './components/CategoryFormDrawer'
 import { DishFormDrawer } from './components/DishFormDrawer'
 import { groupDishes } from './menu.utils'
 
@@ -25,7 +26,21 @@ export const MenuPage = () => {
   const moveDish = useMoveDish()
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<Dish | 'new' | null>(null)
-  const [managingCategories, setManagingCategories] = useState(false)
+  const [newDishCategory, setNewDishCategory] = useState<string>()
+  const [editingCategory, setEditingCategory] = useState<Category | 'new' | null>(null)
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+
+  const toggle = (id: string) =>
+    setCollapsed((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  const addDish = (categoryId?: string) => {
+    setNewDishCategory(categoryId)
+    setEditing('new')
+  }
 
   const { data: dishes } = dishesQuery
   const groups = useMemo(
@@ -121,13 +136,10 @@ export const MenuPage = () => {
         actions={
           canEdit && (
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => setManagingCategories(true)}>
-                <FolderPlus className="size-4" /> Categories
+              <Button variant="outline" onClick={() => setEditingCategory('new')}>
+                <FolderPlus className="size-4" /> Add category
               </Button>
-              <Button
-                disabled={(categories?.length ?? 0) === 0}
-                onClick={() => setEditing('new')}
-              >
+              <Button disabled={(categories?.length ?? 0) === 0} onClick={() => addDish()}>
                 <Plus className="size-4" /> Add dish
               </Button>
             </div>
@@ -147,34 +159,85 @@ export const MenuPage = () => {
           body="Dishes sit inside categories, like Rice or Drinks. Add a category first."
           action={
             canEdit && (
-              <Button onClick={() => setManagingCategories(true)}>
+              <Button onClick={() => setEditingCategory('new')}>
                 <FolderPlus className="size-4" /> Add a category
               </Button>
             )
           }
         />
       ) : groups.length === 0 ? (
-        <StatusMessage title={search ? 'No dishes match that' : 'No dishes yet'} />
+        <StatusMessage title="No dishes match that" />
       ) : (
         <div className="flex flex-col gap-6">
-          {groups.map(({ category, dishes: rows, firstId, lastId }) => (
-            <section key={category.id}>
-              <h2 className="mb-2 text-xl">{category.name}</h2>
-              <DataTable
-                caption={category.name}
-                columns={buildColumns(firstId, lastId)}
-                rows={rows}
-                rowKey={({ id }) => id}
-              />
-            </section>
-          ))}
+          {groups.map(({ category, dishes: rows, firstId, lastId }) => {
+            const open = Boolean(search) || !collapsed.has(category.id)
+            const count = rows.length
+            return (
+              <section key={category.id} className="rounded-2xl border border-line bg-paper">
+                <div className="flex items-center gap-2 px-4 py-3">
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    onClick={() => toggle(category.id)}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-xl">{category.name}</h2>
+                      <p className="text-sm text-muted">
+                        {count} item{count === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                    <ChevronDown
+                      className={cn('size-5 text-muted transition-transform', open && 'rotate-180')}
+                    />
+                  </button>
+                  {canEdit && (
+                    <>
+                      <IconButton
+                        label={`Add a dish to ${category.name}`}
+                        onClick={() => addDish(category.id)}
+                      >
+                        <Plus className="size-4" />
+                      </IconButton>
+                      <IconButton
+                        label={`Edit ${category.name}`}
+                        onClick={() => setEditingCategory(category)}
+                      >
+                        <Pencil className="size-4" />
+                      </IconButton>
+                    </>
+                  )}
+                </div>
+                {open &&
+                  (rows.length === 0 ? (
+                    <p className="border-t border-line px-4 py-3 text-sm text-muted">
+                      No dishes in this category yet.
+                    </p>
+                  ) : (
+                    <div className="border-t border-line p-2">
+                      <DataTable
+                        caption={category.name}
+                        columns={buildColumns(firstId, lastId)}
+                        rows={rows}
+                        rowKey={({ id }) => id}
+                      />
+                    </div>
+                  ))}
+              </section>
+            )
+          })}
         </div>
       )}
 
-      <CategoriesDrawer open={managingCategories} onClose={() => setManagingCategories(false)} />
+      <CategoryFormDrawer
+        open={editingCategory !== null}
+        category={editingCategory === 'new' ? null : editingCategory}
+        onClose={() => setEditingCategory(null)}
+      />
       <DishFormDrawer
         open={editing !== null}
         dish={editing === 'new' ? null : editing}
+        categoryId={newDishCategory}
         onClose={() => setEditing(null)}
       />
     </>

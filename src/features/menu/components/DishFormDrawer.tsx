@@ -41,10 +41,12 @@ type DishValues = z.infer<typeof dishSchema>
 
 interface DishFormProps {
   dish: Dish | null
+  /** Preselects the category when a dish is added from inside one. */
+  categoryId?: string
   onClose: () => void
 }
 
-const DishForm = ({ dish, onClose }: DishFormProps) => {
+const DishForm = ({ dish, categoryId = '', onClose }: DishFormProps) => {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const { data: categories } = useCategories()
   const { data: optionGroups } = useOptionGroups()
@@ -63,7 +65,7 @@ const DishForm = ({ dish, onClose }: DishFormProps) => {
       ? { ...dish, price: penceToPounds(dish.price) }
       : {
           name: '',
-          categoryId: '',
+          categoryId,
           description: '',
           image: '',
           badges: [],
@@ -194,8 +196,13 @@ interface DishFormDrawerProps extends DishFormProps {
   open: boolean
 }
 
-export const DishFormDrawer = ({ open, dish, onClose }: DishFormDrawerProps) => (
+export const DishFormDrawer = ({ open, dish, categoryId, onClose }: DishFormDrawerProps) => (
   <Drawer open={open} onClose={onClose} label={dish ? 'Edit dish' : 'Add dish'}>
-    <DishForm key={dish?.id ?? 'new'} dish={dish} onClose={onClose} />
+    <DishForm
+      key={dish?.id ?? `new-${categoryId ?? ''}`}
+      dish={dish}
+      categoryId={categoryId}
+      onClose={onClose}
+    />
   </Drawer>
 )
