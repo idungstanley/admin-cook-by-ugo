@@ -12,10 +12,15 @@ import { ErrorMessage } from '@/components/ui/StatusMessage'
 import { WEEK_DAYS } from '@/constants/menu'
 import { penceToPounds, poundsToPence } from '@/lib/format'
 import { createId } from '@/lib/ids'
-import { useSaveSettings, useSettings } from '@/services/settings/settings.queries'
+import {
+  useAddressServices,
+  useSaveSettings,
+  useSettings,
+} from '@/services/settings/settings.queries'
 import type { ShopSettings } from '@/types'
 import { DeliveryMap } from './components/DeliveryMap'
 import { KitchenAddressFinder } from './components/KitchenAddressFinder'
+import { KitchenAddressSearch } from './components/KitchenAddressSearch'
 import { PostcodeChecker } from './components/PostcodeChecker'
 
 const money = (label: string) => z.number(`Enter ${label}`).min(0, 'Cannot be negative')
@@ -90,6 +95,12 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
   const closures = useFieldArray({ control, name: 'closures', keyName: 'fieldKey' })
   const rings = useFieldArray({ control, name: 'deliveryRadii', keyName: 'fieldKey' })
   const liveRings = useWatch({ control, name: 'deliveryRadii' })
+
+  const { data: addressServices } = useAddressServices()
+  const pickKitchenAddress = ({ street, postcode }: { street: string; postcode: string }) => {
+    setValue('kitchenAddress', street, { shouldDirty: true })
+    setValue('kitchenPostcode', postcode, { shouldDirty: true, shouldValidate: true })
+  }
 
   const submit = (values: SettingsValues) =>
     save.mutate({
@@ -190,13 +201,14 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
               error={errors.kitchenAddress?.message}
               {...register('kitchenAddress')}
             />
-            <KitchenAddressFinder
-              getPostcode={() => getValues('kitchenPostcode')}
-              onPick={({ street, postcode }) => {
-                setValue('kitchenAddress', street, { shouldDirty: true })
-                setValue('kitchenPostcode', postcode, { shouldDirty: true, shouldValidate: true })
-              }}
-            />
+            {addressServices?.addressSearch ? (
+              <KitchenAddressSearch onPick={pickKitchenAddress} />
+            ) : (
+              <KitchenAddressFinder
+                getPostcode={() => getValues('kitchenPostcode')}
+                onPick={pickKitchenAddress}
+              />
+            )}
             <TextField
               label="Free delivery over (£, optional)"
               placeholder="No free delivery"

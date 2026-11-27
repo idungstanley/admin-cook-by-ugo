@@ -17,6 +17,17 @@ export interface AddressLookup {
 }
 
 export const settingsApi = {
+  /** Which address services are set up, from the public site info. */
+  getAddressServices: () =>
+    http.get<{ addressSearch?: boolean; addressLookup: boolean }>('/public/site'),
+  searchAddresses: (query: string, session: string) =>
+    http.get<{ id: string; text: string; secondary: string }[]>(
+      `/public/places/search?q=${encodeURIComponent(query)}&session=${encodeURIComponent(session)}`,
+    ),
+  getPlaceAddress: (placeId: string, session: string) =>
+    http.get<{ line1: string; city: string; postcode: string }>(
+      `/public/places/${encodeURIComponent(placeId)}?session=${encodeURIComponent(session)}`,
+    ),
   /** Royal Mail addresses for any postcode, when Ideal Postcodes is set up. */
   findAddresses: (postcode: string) =>
     http.get<AddressLookup>(`/public/addresses/${encodeURIComponent(postcode.trim())}`),

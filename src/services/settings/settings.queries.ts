@@ -15,3 +15,7 @@ export const useSetOrdersPaused = () =>
     invalidate,
     success: (paused) => (paused ? 'Orders paused' : 'Orders resumed'),
   })
+
+/** Which address services are set up: Google search, or the postcode lookup. */
+export const useAddressServices = () =>
+  useQuery({ queryKey: ['address-services'], queryFn: settingsApi.getAddressServices })
