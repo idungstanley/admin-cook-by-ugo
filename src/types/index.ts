@@ -196,7 +196,8 @@ export interface ShopSettings {
   ordersPaused: boolean
   hours: DayHours[]
   closures: Closure[]
-  kitchen: { postcode: string; lat: number; lng: number }
+  /** `address` is the street, shown to riders as where to collect from. */
+  kitchen: { postcode: string; lat: number; lng: number; address?: string }
   deliveryRadii: DeliveryRadius[]
   /** Null when there is no free delivery over an amount. */
   freeDeliveryThreshold: Pence | null
@@ -206,6 +207,7 @@ export interface ShopSettings {
 
 export interface SettingsInput extends Omit<ShopSettings, 'ordersPaused' | 'kitchen'> {
   kitchenPostcode: string
+  kitchenAddress?: string
 }
 
 export type OfferType = 'bogo' | 'percent' | 'amount' | 'free-delivery'

@@ -10,7 +10,16 @@ export interface PostcodeCheck {
   minimumOrder: number
 }
 
+export interface AddressLookup {
+  postcode: string
+  city: string
+  addresses: { id: string; line1: string; line2?: string; city: string }[]
+}
+
 export const settingsApi = {
+  /** Royal Mail addresses for any postcode, when Ideal Postcodes is set up. */
+  findAddresses: (postcode: string) =>
+    http.get<AddressLookup>(`/public/addresses/${encodeURIComponent(postcode.trim())}`),
   getSettings: () => http.get<ShopSettings>('/settings'),
   saveSettings: (input: SettingsInput) => http.put<ShopSettings>('/settings', input),
   /** Uses the same check as checkout, against the saved settings. */

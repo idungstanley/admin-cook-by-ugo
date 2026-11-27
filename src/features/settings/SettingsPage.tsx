@@ -15,6 +15,7 @@ import { createId } from '@/lib/ids'
 import { useSaveSettings, useSettings } from '@/services/settings/settings.queries'
 import type { ShopSettings } from '@/types'
 import { DeliveryMap } from './components/DeliveryMap'
+import { KitchenAddressFinder } from './components/KitchenAddressFinder'
 import { PostcodeChecker } from './components/PostcodeChecker'
 
 const money = (label: string) => z.number(`Enter ${label}`).min(0, 'Cannot be negative')
@@ -34,6 +35,7 @@ const settingsSchema = z.object({
     .string()
     .trim()
     .regex(/^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i, 'Enter the kitchen postcode'),
+  kitchenAddress: z.string().trim().max(200),
   deliveryRadii: z
     .array(
       z.object({
@@ -58,6 +60,7 @@ const toFormValues = (settings: ShopSettings): SettingsValues => ({
   hours: settings.hours,
   closures: settings.closures,
   kitchenPostcode: settings.kitchen.postcode,
+  kitchenAddress: settings.kitchen.address ?? '',
   deliveryRadii: settings.deliveryRadii.map((ring) => ({
     ...ring,
     fee: penceToPounds(ring.fee),
@@ -77,6 +80,8 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
     register,
     handleSubmit,
     control,
+    getValues,
+    setValue,
     formState: { errors },
   } = useForm<SettingsValues>({
     resolver: zodResolver(settingsSchema),
@@ -178,6 +183,19 @@ const SettingsForm = ({ settings }: { settings: ShopSettings }) => {
               className="uppercase"
               error={errors.kitchenPostcode?.message}
               {...register('kitchenPostcode')}
+            />
+            <TextField
+              label="Kitchen street (optional)"
+              placeholder="Shown to riders as where to collect"
+              error={errors.kitchenAddress?.message}
+              {...register('kitchenAddress')}
+            />
+            <KitchenAddressFinder
+              getPostcode={() => getValues('kitchenPostcode')}
+              onPick={({ street, postcode }) => {
+                setValue('kitchenAddress', street, { shouldDirty: true })
+                setValue('kitchenPostcode', postcode, { shouldDirty: true, shouldValidate: true })
+              }}
             />
             <TextField
               label="Free delivery over (£, optional)"
