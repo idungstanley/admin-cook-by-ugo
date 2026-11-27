@@ -16,9 +16,12 @@ export const isActiveOrder = ({ status }: Order) => ACTIVE_STATUSES.includes(sta
 const MINUTE_MS = 60_000
 const DEFAULT_DELIVERY_MINUTES = 20
 
-/** When the customer expects the food: their chosen slot, or order time plus the wait. */
+/**
+ * When the customer expects the food: the order time, or for a scheduled order the time the
+ * kitchen starts, plus preparation and delivery.
+ */
 export const dueAt = (order: Pick<Order, 'createdAt' | 'etaMinutes' | 'scheduledFor'>) =>
-  order.scheduledFor ?? order.createdAt + order.etaMinutes * MINUTE_MS
+  (order.scheduledFor ?? order.createdAt) + order.etaMinutes * MINUTE_MS
 
 /** When the food must leave the kitchen to arrive on time. */
 export const readyBy = (order: Order) =>

@@ -59,11 +59,12 @@ describe('board', () => {
     expect(isOverdue(order({ createdAt: late, status: 'delivered' }), NOW)).toBe(false)
   })
 
-  it('waits for the chosen slot before flagging a scheduled order', () => {
+  it('counts preparation and delivery from the scheduled start time', () => {
     const placedEarly = order({ createdAt: NOW - 3 * 3_600_000, scheduledFor: NOW + 600_000 })
+    const due = NOW + 600_000 + 40 * 60_000
     expect(isOverdue(placedEarly, NOW)).toBe(false)
-    expect(dueAt(placedEarly)).toBe(NOW + 600_000)
-    expect(readyBy({ ...placedEarly, deliveryMinutes: 25 })).toBe(NOW + 600_000 - 25 * 60_000)
+    expect(dueAt(placedEarly)).toBe(due)
+    expect(readyBy({ ...placedEarly, deliveryMinutes: 25 })).toBe(due - 25 * 60_000)
   })
 
   it('drops older delivered orders and puts the oldest ticket first', () => {

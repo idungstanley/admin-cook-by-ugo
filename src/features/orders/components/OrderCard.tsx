@@ -61,8 +61,8 @@ export const OrderCard = ({ order }: { order: Order }) => {
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
         <span className="inline-flex items-center gap-1">
           <Clock className="size-3.5" aria-hidden />
-          {order.scheduledFor ? 'For' : 'Due'} {formatTime(dueAt(order))} · ready by{' '}
-          {formatTime(readyBy(order))}
+          {order.scheduledFor && <>Start {formatTime(order.scheduledFor)} · </>}
+          Due {formatTime(dueAt(order))} · ready by {formatTime(readyBy(order))}
           <span className="text-muted/70">({formatAge(order.createdAt)})</span>
         </span>
         {overdue && <Badge tone="jollof">Overdue</Badge>}

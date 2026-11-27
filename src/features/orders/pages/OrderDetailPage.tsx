@@ -122,7 +122,10 @@ export const OrderDetailPage = ({ orderId }: { orderId: string }) => {
           <div className="flex flex-col gap-4">
             <CardSection title="Timing">
               <dl>
-                <Row label={order.scheduledFor ? 'Scheduled for' : 'Due (ASAP)'}>
+                {order.scheduledFor && (
+                  <Row label="Start cooking">{formatDateTime(order.scheduledFor)}</Row>
+                )}
+                <Row label={order.scheduledFor ? 'Arrives' : 'Due (ASAP)'}>
                   {formatDateTime(dueAt(order))}
                 </Row>
                 <Row label="Food ready by">{formatTime(readyBy(order))}</Row>
